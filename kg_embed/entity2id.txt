@@ -1,0 +1,465 @@
+464
+ATP software	0
+Carborne Controller	1
+safety of the train	2
+hardware board resources	3
+period time control	4
+2oo2 data comparison	5
+external systems	6
+data from other subsystems	7
+state of ATP	8
+EOA	9
+dynamic track profiles	10
+odometer	11
+trackside beacon message	12
+train's kinematics	13
+train speed	14
+location	15
+energy	16
+environmental restricted	17
+platform information	18
+train door	19
+PSD	20
+vital reports	21
+commands to external systems	22
+rolling stock	23
+UNK	24
+developers	25
+basic principles of urban rail transit signaling system	26
+basic principles	27
+urban rail transit signaling system	28
+carborne controller's requirements	29
+work environment	30
+hardware structure	31
+functions of each board	32
+relative standards of the railway signaling production	33
+Vital Coded Processor	34
+vital part of ATP software	35
+raw ATP source codes	36
+vital coded codes	37
+random failures	38
+vital code error	39
+checking mechanism	40
+vital code errors	41
+2��2oo2 vital computation platform	42
+onboard ATP software	43
+sufficient resources	44
+performance requirements of ATP software	45
+redundant communication	46
+independent computation	47
+2 channels	48
+EN50128	49
+ATP software development	50
+CC subsystem architecture description	51
+requirements of ATP	52
+label	53
+traceability with the higher level demands	54
+modules	55
+ATP requirements	56
+inputs	57
+outputs	58
+ARDL	59
+procedure of a requirement	60
+test conditions	61
+conventions of ARDL	62
+software requirements	63
+indentation	64
+hierarchy structure	65
+(k)	66
+value in the current cycle	67
+(k-1)	68
+value in the last cycle	69
+and	70
+logic operation	71
+or	72
+not	73
+brackets	74
+arrays	75
+uppercase	76
+system constants	77
+ATP	78
+vital settings	79
+parameters of track	80
+configurable data	81
+train characteristics	82
+specific demands	83
+project configuration	84
+track map	85
+block	86
+ZC	87
+physical devices	88
+singularities	89
+signal	90
+switcher	91
+platform	92
+permanent speed restrictions	93
+protected areas	94
+virtual restricted zones	95
+limit points	96
+abscissa of a block	97
+distance from the block endpoint of the UP orientation	98
+abscissa	99
+downstream block	100
+DOWN orientation	101
+UP orientation	102
+vehicles	103
+CC_SSID	104
+ATP identify	105
+CPU1	106
+VLE-2 board	107
+CPU2	108
+END_1	109
+END_2	110
+CC data plug	111
+CPU module	112
+projects	113
+CC offline tool	114
+track maps	115
+project-related configuration parameters	116
+other information	117
+correctness of parameters	118
+CCNV	119
+vital rolling stock inputs messages	120
+VIOM1VitallInput	121
+VIOM2VitallInput	122
+ST_VIOM_INPUT	123
+structure of global variable	124
+logical "or" operation	125
+VIOM messages generation	126
+value from different input ports	127
+offline tools	128
+configurable inputs ATP supported	129
+project data	130
+loop hour	131
+basis of validity judgment	132
+timeline of communication	133
+cycle number	134
+message loop hour	135
+source of the message	136
+BM beacon	137
+Block module	138
+CBI radio.	139
+parsing of BM beacon message	140
+block mode variants	141
+orientation	142
+consistency of cog count	143
+coded odometer	144
+consistency	145
+cog count	146
+cog code	147
+consistency of cog code	148
+safety	149
+VPB board	150
+sensor testing	151
+working status	152
+sensors	153
+conduction status	154
+top-loc signal	155
+beacon message	156
+coded odometer information	157
+kinematic parameters of the wheel	158
+value in the register.	159
+cog numbers	160
+design	161
+sensor test results	162
+WheelMaximumMovement	163
+WheelMinimumMovement	164
+matching status	165
+static	166
+wheel	167
+NOT_INITIALIZED	168
+odometer state	169
+WAITING_COG_POSITION_CODE_READY	170
+INITIALIZED	171
+INVALID	172
+train brake axle	173
+detected wheel movement	174
+actual train movement	175
+over-estimated actual train movement	176
+safety consideration	177
+locked	178
+axle	179
+blocked	180
+speed measuring system	181
+OdometerRef_1	182
+odometer of the remote ATP	183
+OdometerRef_2	184
+train kinematic parameters	185
+other fuctions	186
+coding odometer	187
+sensor from coded odometer	188
+cog impulse	189
+adjacent MTIB	190
+train movement	191
+cog length	192
+cogs	193
+wheel diameter	194
+cog��s length	195
+theoretical cog length	196
+train displacement	197
+beacon of this fixed distance	198
+real cog length	199
+kinematic calculation	200
+position	201
+sequences of beacons	202
+train location	203
+external and internal side of each train	204
+location information	205
+wheel block consideration	206
+VIOM input port	207
+cab activation	208
+train front	209
+BLOCK mode	210
+CBTC	211
+BM input	212
+BM mode	213
+CBTC mode	214
+ZCmessage	215
+[REF16]	216
+[REF17]	217
+parameters	218
+iTC system data	219
+vital setting	220
+train	221
+features	222
+system design	223
+the features of train	224
+CC Non Vital	225
+FSFB2	226
+onboard ATP	227
+request	228
+command	229
+VLE-2 debugging Ethernet port	230
+attacks	231
+invalid accesses	232
+codes	233
+[REF15]	234
+vital variable	235
+VCP	236
+check words	237
+time-label technique	238
+raw data	239
+higher 32 bits	240
+lower 32 bits	241
+data	242
+non-vital devices	243
+two parts of programs	244
+program	245
+iCODER100-VCP1	246
+iCODER100-VCP2	247
+VxWorks 5.5	248
+computer	249
+two redundant codes	250
+VCP1	251
+VCP2	252
+comparison	253
+commercial compare tools	254
+compare redundant code	255
+redundant code	256
+redundant code generation function	257
+module function	258
+coded order	259
+calling order	260
+system	261
+iCODER-100	262
+SIL requirement	263
+nesting	264
+10 layers	265
+two ATP_CYCLE_TIME	266
+vital inputs	267
+C_TTIS minutes	268
+ATP embedded software	269
+INIT_AVAIL_MAX_TIME	270
+external interfaces	271
+[REF2]	272
+2oo2 constraints	273
+internal interfaces	274
+VLE-2 structure	275
+device number	276
+CC	277
+train type	278
+cab id	279
+network identification information	280
+interface between ATP and CC data plug	281
+[REF3]	282
+CCdataPlugInfo	283
+safety-related information	284
+real-time odometer	285
+beacon information	286
+odometer sensors testing sequence	287
+interface between ATP and VPB	288
+[REF4]	289
+beacon antenna	290
+VPB registers	291
+two independent channels	292
+CPU	293
+structure 2 out of 2	294
+information	295
+core computation functions	296
+vital messages	297
+redundant ATP	298
+VIOM	299
+LC	300
+CI	301
+running status	302
+operational commands	303
+interface between ATP and CCNV	304
+[REF5]	305
+train id	306
+network address	307
+RTC clock information	308
+variables	309
+input or judging criteria	310
+functions	311
+non-vital message	312
+NonVitalRequest	313
+CRC	314
+global variable	315
+structure	316
+four VIOMs	317
+sequence	318
+CAB1	319
+VIOM1-1	320
+VIOM1-2	321
+CAB2	322
+cycle time	323
+internal status	324
+vital output order	325
+control functions	326
+DMI	327
+other devices	328
+NonVItalReport	329
+distant ATP	330
+interface between ATP and distant ATP	331
+[REF6]	332
+CCsynchroReport	333
+ST_SYNCHRO_REPORT	334
+synchronization message	335
+IdenticalCCsyncReport	336
+SACEM communication protocol	337
+synchronization report	338
+CCNV_RedundantATPmessage	339
+OtherCCsynchroReport	340
+failure	341
+vital checksum	342
+interface between ATP and VIOM	343
+four VIOM vital inputs message	344
+both ends of the train	345
+two VIOM	346
+logical OR	347
+same cab	348
+vital outputs	349
+four VIOM	350
+rolling stock commands	351
+IdenticalVIOM1Out	352
+IdenticalVIOM2Out	353
+4 VIOMs	354
+both train ends	355
+interface between ATP and ZC	356
+[REF7]	357
+Location Report message	358
+SendLocReportOnZCunderTrainHead	359
+1	360
+IdenticalLocReport	361
+ZCidUnderTrainHead	362
+SendLocReportOnZCunderTrainTail	363
+ZCidUnderTrainTail	364
+Location Reports	365
+farthest authorization location	366
+validity	367
+train moving	368
+CCNV_EOAmessage	369
+CCNV_VariantMessage	370
+EOA_Report	371
+VariantReport	372
+SSIDofZC	373
+ST_EOA_REPORT	374
+ST_VARIANT_REPORT	375
+one ZC	376
+two line sections	377
+adjacent ZC	378
+variants	379
+variants message	380
+several line sections' variants	381
+line sections'variants	382
+interface between ATP and LC	383
+[REF8]	384
+CCNV_SynchrodateMessage	385
+CCNV_VersionAuthMessage	386
+CCNV_TSRmessage	387
+DateSynchronizationReport	388
+VersionAuthorization	389
+TSRdownloadContent	390
+ST_DATE_SYNCH_REPORT	391
+ST_VERSION_AUTH	392
+ST_TSR_BLOCK	393
+TSR	394
+number	395
+MAX_TSR_NUMBER	396
+date synchronization information	397
+trackside time	398
+temporary speed restriction	399
+TRS release command	400
+ATS operator	401
+most restrictive temporary speed restriction	402
+TSR message	403
+versions	404
+relevant track	405
+version authorization message	406
+version report	407
+current software version	408
+version of the configuration data	409
+version of the all the ZC region	410
+checksum	411
+VersionFromCCreport	412
+ATP software version	413
+ATP vital parameters version	414
+ZC areas versions	415
+ATP cycle time	416
+IdenticalVersionReport	417
+interface between ATP and CI	418
+interface between ATP and PSD	419
+Clsetting	420
+CommunicateWithPSD	421
+0	422
+connection	423
+FSFB2 communication protocol	424
+IdenticalCIsetting	425
+FSFB2 protocol	426
+PSDmanagerOrder_A.id	427
+valid	428
+PSDmanagerOrder_B.id	429
+IdenticalCIsetting[0]	430
+IdenticalCIsetting[1]	431
+CI message	432
+message	433
+age	434
+FSFB2_MESSAGE_TIMEOUT	435
+valid previous CI message	436
+CI_Iostatus	437
+restricted	438
+network addresses	439
+power-up	440
+DLU	441
+interface between ATP and DLU	442
+[REF12]	443
+network addressed	444
+initialization	445
+project vital settings	446
+project configurations	447
+interface between ATP and project data	448
+[REF11]	449
+binary project vital settings	450
+two PowerPC CPUs	451
+VLE-3 board	452
+VCP signature tables	453
+two CPUs	454
+common mode failure	455
+interface	456
+Memorized location	457
+efficiency	458
+power-on	459
+record	460
+hardware resources	461
+vital clock	462
+file system	463

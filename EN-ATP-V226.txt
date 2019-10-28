@@ -1,0 +1,2455 @@
+ 1  . 	GENERAL DESCRIPTION
+ 1  .  1  . 	Purpose of the Document
+This document defines the ATP software requirements assigned from the onboard train control subsystem of the CASCO's intelligent train control production  ,  including the constraints  ,  safety requirements reliability  ,  maintainability  ,  interface specifications and all functional requirements with which ATP software need to comply . 
+The ATP software described in this document is not only including the software running on the VLE- 2  board deployed in the onboard controller rack  ,  but including the communication interface with other systems . 
+This document is the specification for the ATP software designers  ,  and is the reference for safety analysts  ,  valuators  ,  project managers and requirement verifiers etc . 
+ 1  .  2  . 	Field of Application
+This document is part of iTC R&D  ,  and it concerns the Carborne Controller  ,  which is an onboard ATC part of the iCMTC signaling solution . 
+ 1  .  3  . 	Identification of the Last Requirement Defined
+The last requirement defined is the ATP-SwRS- 0  8  0  4   ,  and the numeration must restart from ATP-SwRS- 0  8  0  5  . 
+ 2  . 	SYSTEM CONTEXT
+ 2  .  1  . 	Purpose
+The ATP software is the core component of the Carborne Controller  ,  playing the important role for guaranteeing the safety of the train during operation .  ATP achieved including :
+using hardware board resources to realize the period time control  ,  and the  2 oo 2  data comparison ; 
+access external systems or data from other subsystems within the CC ; 
+through from the rolling stock and internal or external systems data to determine the state of ATP  ,  the EOA and dynamic track profiles ; 
+according to the odometer and trackside beacon message  ,  calculating the train's kinematics and localizing the train on the map ; 
+monitoring train speed  ,  location and energy to avoid the train to exceed the environmental restricted  ,  and ensuring the train to stop before the end of authorized ; 
+according to the platform information  ,  enabling to operate the train door and PSD ; 
+generating vital reports and commands to external systems and the rolling stock . 
+ 2  .  2  . 	Assumptions
+ATP software developers should be aware of the basic principles of urban rail transit signaling system  ,  familiar with carborne controller's requirements and work environment  ,  understand the hardware structure and functions of each board  ,  experience with real-time embedded systems development  ,  and follow the relative standards of the railway signaling production . 
+The vital part of ATP software applies  " Vital Coded Processor  "  technique  ,  which can convert the raw ATP source codes to the vital coded codes  ,  and guarantee that the occur of random failures by the hardware must lead to the vital code error under the probability of SIL 4   ,  and the vital code errors can be detected by the checking mechanism . 
+The onboard ATP software running on CASCO's new  2 × 2 oo 2  vital computation platform .  The hardware platform should have sufficient resources to meet the performance requirements of ATP software .  Meanwhile  ,  the platform should provide  2  channels for redundant communication and independent computation . 
+ 2  .  3  . 	Application and Reference Documents
+ 2  .  4  . 	Abbreviations and Defines
+Reference to  [ APP 1  ]  for abbreviations and defines . 
+ 2  .  5  . 	Conventions
+The organization of ATP software development shall follow the process of SIL 4  system defined in EN 5  0  1  2  8  .  The requirements of ATP inherit from the CC subsystem architecture description  ,  and defining a unique label for each requirement is used to guarantee the traceability with the higher level demands .  In this specification  ,  ATP requirements are partitioned as different functional modules ;  and for each module  ,  the inputs and outputs shall be defined clearly .  Each functional requirement of ATP shall be testable  ,  which means the document shall give a precise definition for each requirement .  Therefore  ,  for increasing the accuracy  ,  ARDL  ( Accurate Requirement Description Language )  are defined and used to describe the procedure of a requirement .  In this way  ,  tester easy to set test conditions according to the ARDL and observe whether the requirement is realized correctly . 
+The conventions of ARDL used for describing software requirements are shown as following :
+Use indentation to express hierarchy structure ; 
+Use  ( k )  after each variable to represent the value in the current cycle  ,  and  ( k- 1  )  for the last cycle ; 
+Use  " and "   ,   " or "   ,   " not "  for logic operation ; 
+Use brackets to represent arrays ; 
+Use uppercase to represent system constants . 
+The description of common functions used in ARDL are shown as Table  2  3  . 
+ 3  . 	GENERAL CONSTRAINTS
+ 3  .  1  . 	User Characteristics
+N / A
+ 3  .  2  . 	Safety Requirements
+ [ iTC_CC_ATP-SwRS- 0  0  0  1  ] 
+Refer to  6  .  7   ,  the onboard ATP software shall be SIL 4  according to the CENELEC standard  [ REF 1  6  ]  and  [ REF 1  7  ]  . 
+ 3  .  3  . 	Production Constraints
+ [ iTC_CC_ATP-SwRS- 0  0  0  3  ] 
+ATP software shall use parameters come from iTC system data preparation for different project's deployment .  For each project  ,  ATP software reads the track map and vital setting to adapt the features of train and system design . 
+ [ iTC_CC_ATP-SwRS- 0  0  0  4  ] 
+For sub-system design constraints  ,  it is not possible to establish more than two channel of communication with PSD platform manager .  Therefore  ,  ATP shall activate a maximum of two communication channels with PSD platform managers ordered by CC Non Vital . 
+ [ iTC_CC_ATP-SwRS- 0  0  0  5  ] 
+For interface design constraints  ,  ATP shall use FSFB 2  safety protocol with PSD platform managers with respect with safety principles . 
+ [ iTC_CC_ATP-SwRS- 0  5  5  0  ] 
+During the operation  ,  the onboard ATP shall not response any request or command from the VLE- 2  debugging Ethernet port  ,  in order to avoid the invalid accesses and the attacks . 
+ [ iTC_CC_ATP-SwRS- 0  4  9  8  ] 
+The codes of the onboard ATP shall follow the  [ REF 1  5  ]  rules of the VCP .  
+NOTES :
+For each vital variable encoded by the VCP tool  ,  its higher  3  2  bits are raw data  ,  and its lower  3  2  bits are check words of the higher data .  The check words involve time-label technique . 
+ [ iTC_CC_ATP-SwRS- 0  4  9  9  ] 
+For VCP constraints  ,  the onboard ATP importing data from non-vital devices shall encode firstly .  The data of project configuration  ,  track map and CC data plug  ,  all coded by the VCP offline tool . 
+ [ iTC_CC_ATP-SwRS- 0  5  0  0  ] 
+Each set of onboard ATP shall have two parts of programs  ,  which compose two out of two structures .  One program deploys on one of two CPUs of the VLE- 2  board  ,  and the other deploy on another CPU .  They perform similar functions but encode by iCODER 1  0  0 -VCP 1  and iCODER 1  0  0 -VCP 2  respectively . 
+ [ iTC_CC_ATP-SwRS- 0  5  0  1  ] 
+The onboard ATP shall work on the VxWorks  5  .  5  operating system . 
+ [ iTC_CC_ATP-SwRS- 0  7  6  0  ] 
+iCODER-VCP 1  and iCODER-VCP 2  shall be installed in two different computer .  The two redundant codes generated by independent VCP 1  and VCP 2  must be fit through comparison before being used .  Two different commercial compare tools have been used to compare the redundant code generated by two channel . 
+ [ iTC_CC_ATP-SwRS- 0  7  6  1  ] 
+The number of global variables that need to be redundant coded in the ATP source code cannot be more than  3  0  0  0  and the function number is less than  3  0  0  and the local variables less than  2  0   ( the structure local variables can be calculated by the member numbers of the struct )  and the Boolean variables less than  1  0  0  . 
+ [ iTC_CC_ATP-SwRS- 0  7  6  2  ] 
+The redundant code generation function can generate redundant code for functions which satisfies the following constrains of calling order : the module function  ( Not include the module function which noted by comment key word  /  * KWNOPARMF *  /   ,  this kind of module function is processed as compound statement .  )  can only be called at the top level of the program  ,  and the coded order of the module function must be the same with the execution order in source code .  If the order of module function call at running phase is fun 1  first and then fun 2   ,  then the redundant coding order shall also first code to fun 1   ,  then encode fun 2  . 
+ [ iTC_CC_ATP-SwRS- 0  7  6  3  ] 
+The following four annotations of key words are supported :
+The function definition which noted by comment key word  /  * KWNOPARMF *  /   ,  means that the function call will be replaced by the function body .  And use restrictions for comment key word  /  * KWNOPARMF *  /  are as following :
+The function must be defined before it is firstly be called  ,  otherwise  ,  give an error message when redundant code signature checking ; 
+The function cannot have parameters .  Otherwise  ,  give an error message . 
+Return statement cannot be used in this function .  Otherwise  ,  give an error message . 
+Local variables cannot be used in this function .  Otherwise  ,  give an error message . 
+The use restrictions for comment keyword  /  * KWADJMF *  /  are as following . 
+The module function which be noted must satisfy the restrictions of module function .  Otherwise  ,  give an error message . 
+The module function which be noted by keyword  /  * KWADJMF *  /  must be coded separately .  Otherwise  ,  give an error message when redundant code signature checking . 
+ /  * KWADJMF *  /  can only be used to note module function call .  And when coding this module function  ,  the global variables of the module function must use the pre-assigned signatures at the entrance of the function .  And after every operation and adjustment  ,  the signature of the variable must adjust to the signature which in the pre-assigned signature table .  If the function is not be configured  ,  give an error message . 
+The total number of signatures which used in the module function noted by keyword  /  * KWADJMF *  /  cannot exceed  5  0  0  0  .  Otherwise  ,  give an error message . 
+This module function cannot use array .  Otherwise  ,  give an error message . 
+This module function can only use once in the coding files .  Otherwise  ,  give an error message . 
+These fields annotated by keyword are only valid when we first encounter the keyword name  ,  and become invalid when encounter the second one  ,  and unrelated with different nesting relationship between the independent keyword .  But the comment type keyword  /  * KWCODEDBOOL *  /  can not nest used with  /  * KWNOADJ *  /   ,   /  * KWNOPARSE *  /  or  /  * KWNODT *  /  .  And the comment keyword  /  * KWNOPARSE *  /  cannot nest with  /  * KWNOADJ *  /   ,   /  * KWCODEDBOOL *  /  or  /  * KWNODT *  /  .  Otherwise the iCODER- 1  0  0  will make an error report . 
+ [ iTC_CC_ATP-SwRS- 0  7  6  4  ] 
+For the system which using iCODER- 1  0  0  to achieve SIL requirement  ,  the signature of the output shall be critically checked . 
+ [ iTC_CC_ATP-SwRS- 0  7  6  5  ] 
+Header file’s nesting cannot exceed  1  0  layers . 
+ [ iTC_CC_ATP-SwRS- 0  7  6  6  ] 
+The minimal configuration of the hardware that the software needs :
+ 3  .  5  . 	Quality Requirements
+N / A
+ 3  .  6  . 	Performance
+ [ iTC_CC_ATP-SwRS- 0  0  0  8  ] 
+Vital inputs of ATP embedded software shall be acquired every ATP_CYCLE_TIME . 
+Once vital inputs acquired  ,  ATP embedded software shall refresh its outputs in less than two ATP_CYCLE_TIME  ,  and send them to CCNV . 
+ [ iTC_CC_ATP-SwRS- 0  5  7  5  ] 
+The set-up of the ATP software shall not exceed C_TTIS minutes . 
+ [ iTC_CC_ATP-SwRS- 0  0  0  9  ] 
+From power-up and if conditions on inputs allow to reach a higher level of train availability  ( that is to compute at least one safety-related output at permissive state )  ATP embedded software shall be able to increase train operation availability in less than INIT_AVAIL_MAX_TIME . 
+ 4  . 	INTERFACE SPECIFICATIONS
+ 4  .  1  . 	List of Interface
+ 4  .  1  .  1  . 	External interface
+According to  [ REF 2  ]   ,  the onboard ATP shall have external interfaces with other system  ,  as shown in the  . 
+ 4  .  1  .  2  . 	Internal interface
+According to the VLE- 2  structure and  2 oo 2  constraints  ,  the onboard ATP shall have two internal interfaces  ,  as shown in the Table  4  2  . 
+ 4  .  2  . 	Interface with CC Data Plug
+ 4  .  2  .  1  . 	Role of interface
+ATP through this interface to obtain the device number of the CC  ,  train type and cab id  ,  used to determine train characteristics as well as the network identification information . 
+ [ iTC_CC_ATP-SwRS- 0  5  5  1  ] 
+The interface between ATP and CC data plug shall be compliant with  [ REF 3  ]  document . 
+ 4  .  2  .  2  . 	Physical level 
+Refer to  [ REF 3  ]  . 
+ 4  .  2  .  3  . 	Protocol level
+Refer to  [ REF 3  ]  . 
+ 4  .  2  .  4  . 	Application level
+ 4  .  2  .  4  .  1  . 	ATP->CC data plug
+ 4  .  2  .  4  .  2  . 	CC data plug->ATP
+ATP read CCdataPlugInfo from the CC data plug whose structure as shown in Table  4  4  .  The safety-related information used by ATP are coded by VCP and the other information such IP address sent to DLU or CCNV are not need to encode . 
+ 4  .  2  .  5  . 	Software compatibility
+N / A
+ 4  .  2  .  6  . 	Hardware compatibility
+N / A
+ 4  .  2  .  7  . 	Implicit choices and justification
+N / A
+ 4  .  3  . 	Interface with VPB
+ 4  .  3  .  1  . 	Role of interface
+Through this interface  ,  ATP obtains the real-time odometer and beacon information updated by the VPB board .  In addition  ,  when the train stopped  ,  ATP sends the odometer sensors testing sequence to the VPB board . 
+ [ iTC_CC_ATP-SwRS- 0  5  5  2  ] 
+The interface between ATP and VPB shall be compliant with  [ REF 4  ]  document . 
+ 4  .  3  .  2  . 	Physical level 
+Refer to  [ REF 4  ]  . 
+ 4  .  3  .  3  . 	Protocol level
+Refer to  [ REF 4  ]  . 
+ 4  .  3  .  4  . 	Application level
+VPB board receives and processes the signal from odometer and beacon antenna  ,  and ATP gets the result through the VPB registers .  There are two independent channels in the VPB board  ,  and it will correspond to each CPU in ATP respectively to form the structure  2  out of  2  .  
+According to  [ REF 4  ]   ,  the onboard ATP shall send information to VPB as shown in the Table  4  5  . 
+NOTES：
+For the CPU 1  for the VLE- 2  board  ,  ATP software writes the sensors testing sequence to the VPB register ;  And for the CPU 2   ,  ATP software read the sensors testing from the VPB register . 
+According to the  [ REF 4  ]   ,  the onboard ATP read information from VPB as shown in Table  4  6  . 
+ 4  .  3  .  5  . 	Software compatibility
+N / A
+ 4  .  3  .  6  . 	Hardware compatibility
+N / A
+ 4  .  3  .  7  . 	Implicit choices and justification
+N / A
+ 4  .  4  . 	Interface with CC Non Vital
+ 4  .  4  .  1  . 	Role of interface
+ATP and CCNV  ,  which run on the DVCOM- 2  board  ,  accomplish the core computation functions of the Carborne Controller .  Through this interface  ,  ATP send vital messages to the redundant ATP  ,  VIOM as well as external systems such as the ZC  ,  LC  ,  CI and also received messages from these devices .  In addition  ,  ATP needs to send its running status to the CCNV for maintenance and receive CCNV's operational commands to achieve certain functions . 
+ [ iTC_CC_ATP-SwRS- 0  5  5  3  ] 
+The interface between ATP and CCNV shall be compliant with  [ REF 5  ]  document . 
+ 4  .  4  .  2  . 	Physical level
+Refer to  [ REF 5  ]  . 
+ 4  .  4  .  3  . 	Protocol level
+Refer to  [ REF 5  ]  . 
+ 4  .  4  .  4  . 	Application level
+ 4  .  4  .  4  .  1  . 	ATP->CCNV : initialization report
+After power up  ,  ATP software needs to send train id  ,  train type and network address to the CCNV  ,  which read from the CC data plug according to the  [ REF 5  ]   ,  and the RTC clock information read from VLE- 2  board .  As shown in Table  4  7  . 
+ 4  .  4  .  4  .  2  . 	CCNV->ATP : Non vital request
+For some part of functions that does not regard as SIL 4   ,  CCNV shall handle them and transmit the request to ATP .  These variables will not affect the safety of ATP  ,  so it can be used as input or judging criteria for ATP calculation . 
+ [ iTC_CC_ATP-SwRS- 0  4  7  3  ] 
+Every cycle  ,  ATP software queries whether there are non-vital message transmitted from CCNV  ,  and ATP shall receive and store them into NonVitalRequest :
+If there is no non-vital message from CCNV  ,  then do nothing ; 
+Otherwise  ,  ATP shall check the CRC according to  [ REF 5  ]  :
+If the CRC is correct  ,  then ATP generate the structure of global variable such as Table  4  8  ; 
+Otherwise  ,  ATP shall discard this message . 
+The sequence of the four VIOMs in transportation shall be  ,  in turn  ,  VIOM 1 - 1  and VIOM 1 - 2  in CAB 1   ,  and VIOM 2 - 1  and VIOM 2 - 2  in CAB 2  . 
+ 4  .  4  .  4  .  3  . 	ATP->CCNV : Non vital report
+ATP needs to send the information to CCNV including cycle time  ,  internal status  ,  location and vital output order etc .  Based on this information  ,  CCNV executes the control functions or forward this information to DMI or other devices . 
+ [ iTC_CC_ATP-SwRS- 0  4  4  7  ] 
+Every cycle  ,  ATP shall send the non-vital outputs NonVitalReport to CCNV  ,  whose structure is shown in Table  4  9  .  The rules are as follows :
+At initialization  ,  set all these information at restrictive state ; 
+In normal operation  ,  set the ATP status in accordance with the Table  4  9 
+ [ iTC_CC_ATP-SwRS- 0  4  8  1  ] 
+Every cycle  ,  ATP shall send NonVitalReport message to CCNV
+ 4  .  4  .  4  .  4  . 	ATP->CCNV maintenance information
+ [ iTC_CC_ATP-SwRS- 0  7  4  2  ] 
+ 4  .  4  .  5  . 	Software compatibility
+N / A
+ 4  .  4  .  6  . 	Hardware compatibility
+N / A
+ 4  .  4  .  7  . 	Implicit choices and justification
+N / A
+
+ 4  .  5  . 	Interface with Distant ATP
+ 4  .  5  .  1  . 	Role of interface
+ [ iTC_CC_ATP-SwRS- 0  6  0  2  ] 
+The interface between ATP and distant ATP shall be compliant with  [ REF 6  ]  document . 
+ 4  .  5  .  2  . 	Physical level 
+ 4  .  5  .  3  . 	Protocol level
+ 4  .  5  .  4  . 	Application level
+ 4  .  5  .  4  .  1  . 	Local ATP->Distant ATP
+ [ iTC_CC_ATP-SwRS- 0  3  7  2  ] 
+At each cycle  ,  ATP shall send a CCsynchroReport  ,  which structure is ST_SYNCHRO_REPORT  ,  to the redundant ATP located at the other cab . 
+According to  [ REF 6  ]   ,  ATP sends the synchronization message to the redundant ATP .  The structure of ST_SYNCHRO_REPORT shows in Table  4  1  0  . 
+ [ iTC_CC_ATP-SwRS- 0  4  7  5  ] 
+Every cycle  ,  ATP software sends IdenticalCCsyncReport message to CCNV according to  [ REF 6  ]  as the SACEM communication protocol .  The CCNV will forward this message to the redundant ATP . 
+ 4  .  5  .  4  .  2  . 	Distant ATP -> Local ATP
+According to  [ REF 6  ]   ,  ATP software should receive the synchronization report from the redundant ATP  ,  as shown in Table  4  1  0  . 
+ [ iTC_CC_ATP-SwRS- 0  4  6  9  ] 
+Every cycle  ,  ATP software queries whether there is redundant ATP message CCNV_RedundantATPmessage transmitted from CCNV .  ATP shall receive and store the message into OtherCCsynchroReport .  The receiving and storing rules are following :
+If there is no message from the redundant ATP  ,  or the CRC or vital checksum of this message checked failure  ,  ATP shall discard this message ; 
+Otherwise  ,  ATP shall generate the structure of global variable such as ST_SYNCHRO_REPORT . 
+ 4  .  5  .  5  . 	Software compatibility
+N / A
+ 4  .  5  .  6  . 	Hardware compatibility
+N / A
+ 4  .  5  .  7  . 	Implicit choices and justification
+N / A
+ 4  .  6  . 	Interface with VIOM
+ 4  .  6  .  1  . 	Role of interface
+ [ iTC_CC_ATP-SwRS- 0  6  0  3  ] 
+The interface between ATP and VIOM shall be compliant with  [ REF 5  ]  document . 
+ 4  .  6  .  2  . 	Physical level 
+ 4  .  6  .  3  . 	Protocol level
+ 4  .  6  .  4  . 	Application level
+ 4  .  6  .  4  .  1  . 	VIOM->ATP
+According to  [ REF 5  ]   ,  the ATP software received from both ends of the train for four VIOM vital inputs message .  The vital inputs of the cab  ,  are the result of  " logical OR "  operation between the two VIOM’s of the same cab .  For each VIOM there are as shown in Table  4  1  1  . 
+ 4  .  6  .  4  .  2  . 	ATP->VIOM :
+According to  [ REF 5  ]   ,  ATP send vital outputs to the four VIOM respectively and the message structure as shown in Table  4  1  2  . 
+ [ iTC_CC_ATP-SwRS- 0  4  7  4  ] 
+Every cycle  ,  ATP Software sends the rolling stock commands IdenticalVIOM 1 Out and IdenticalVIOM 2 Out to CCNV according to  [ REF 5  ]  as the SACEM communication protocol .  The CCNV will forward these messages to  4  VIOMs of both train ends
+ 4  .  6  .  5  . 	Software compatibility
+N / A
+ 4  .  6  .  6  . 	Hardware compatibility
+N / A
+ 4  .  6  .  7  . 	Implicit choices and justification
+N / A
+ 4  .  7  . 	Interface with ZC
+ 4  .  7  .  1  . 	Role of interface
+ [ iTC_CC_ATP-SwRS- 0  6  0  4  ] 
+The interface between ATP and ZC shall be compliant with  [ REF 7  ]  document . 
+ 4  .  7  .  2  . 	Physical level 
+ 4  .  7  .  3  . 	Protocol level
+ 4  .  7  .  4  . 	Application level
+ 4  .  7  .  4  .  1  . 	ATP->ZC : Location report
+ [ iTC_CC_ATP-SwRS- 0  4  6  6  ] 
+Every cycle  ,  ATP shall generate the Location Report message to the ZC  ,  as shown in Table  4  1  3  . 
+ [ iTC_CC_ATP-SwRS- 0  4  7  6  ] 
+If the SendLocReportOnZCunderTrainHead in this cycle is True  ,  ATP shall sends IdenticalLocReport message to CCNV according to  [ REF 7  ]  as the SACEM communication protocol .  The CCNV will forward this message to the ZC which id is ZCidUnderTrainHead . 
+ [ iTC_CC_ATP-SwRS- 0  4  7  7  ] 
+If the SendLocReportOnZCunderTrainTailthis cycle is True  ,  ATP shall sends IdenticalLocReport message to CCNV according to  [ REF 7  ]  as the SACEM communication protocol .  The CCNV will forward this message to the ZC which id is ZCidUnderTrainTail . 
+ 4  .  7  .  4  .  2  . 	ZC->ATP : End of authorization
+According to the Location Reports of the CC  ,  the ZC calculates the farthest authorization location of the train  ,  as the EOA of this CC .  ATP shall receive and determine the validity of the EOA .  In CBTC mode  ,  if no available EOA from the ZC  ,  the ATP shall prevent train moving . 
+According to  [ REF 7  ]   ,  ATP software should receive the EOA message from the ZC  ,  as shown in Table  4  1  4  . 
+ [ iTC_CC_ATP-SwRS- 0  4  7  0  ] 
+Every cycle  ,  ATP software queries whether there are ZC messages CCNV_EOAmessage and CCNV_VariantMessage transmitted from CCNV .  ATP shall receive and store the message into EOA_Report and VariantReport  ,  and get the SSID from these messages to generate SSIDofZC .  The receiving and storing rules are following :
+If there is no message from ZC  ,  or the CRC or vital checksum of this message checked failure  ,  ATP shall discard this message ; 
+Otherwise  ,  ATP shall generate the structure of global variable such as ST_EOA_REPORT and ST_VARIANT_REPORT . 
+NOTES :
+Considering the time consumption for the checksums calculating of variant reports  ,  the rule that one ZC can manage at most two line sections shall be followed during the project data preparation .  Therefore  ,  in one variant report message  ,  there are maximum four line sections' variants  ( two for current ZC  ,  and each one for the downstream and the upstream adjacent ZC )  sent from the ZC . 
+ 4  .  7  .  4  .  3  . 	ZC->ATP : Variants
+When ZC sent EOA  ,  includes the variants in this ZC area and adjacent ZC to CC .  Therefore  ,  when received a valid EOA message  ,  ATP shall parse these variants information at the same time . 
+According to  [ REF 7  ]   ,  ATP software should receive the variants message from the ZC  ,  which may include several line sections' variants .  The structure of one line section's variants shows in Table  4  1  5  . 
+ 4  .  7  .  5  . 	Software compatibility
+N / A
+ 4  .  7  .  6  . 	Hardware compatibility
+N / A
+ 4  .  7  .  7  . 	Implicit choices and justification
+N / A
+ 4  .  8  . 	Interface with LC
+ 4  .  8  .  1  . 	Role of interface
+ [ iTC_CC_ATP-SwRS- 0  6  0  5  ] 
+The interface between ATP and LC shall be compliant with  [ REF 8  ]  document . 
+ 4  .  8  .  2  . 	Physical level 
+ 4  .  8  .  3  . 	Protocol level
+ 4  .  8  .  4  . 	Application level
+ [ iTC_CC_ATP-SwRS- 0  4  7  1  ] 
+Every cycle  ,  ATP software queries whether there are LC messages CCNV_SynchrodateMessage  ,  CCNV_VersionAuthMessage and CCNV_TSRmessage transmitted from CCNV .  ATP shall receive and store these messages into DateSynchronizationReport  ,  VersionAuthorization and TSRdownloadContent :
+If there is no message from LC or the CRC  ,  or vital checksum of the message checked failure  ,  ATP shall discard this message ; 
+Otherwise  ,  ATP shall generate the structure of global variable such as ST_DATE_SYNCH_REPORT  ,  ST_VERSION_AUTH and ST_TSR_BLOCK . 
+If there is no CCNV_TSRmessage or the number of TSR in this message is more than MAX_TSR_NUMBER  ,  ATP shall not generate TSRdownloacContent . 
+ 4  .  8  .  4  .  1  . 	LC->ATP : Trackside date
+According to the date synchronization information from the LC  ,  the ATP maintains the trackside time  ,  and sends it to ZC . 
+According to  [ REF 8  ]   ,  ATP software should receive the synchronization message from the LC  ,  as shown in Table  4  1  6  . 
+ 4  .  8  .  4  .  2  . 	LC->ATP : Temporary speed restriction
+In CBTC mode  ,  ATP shall consider the temporary speed restriction setting on the track .  When LC just power on  ,  the message sent to ATP is not including the TRS parts until the LC received the TRS release command from the ATS operator .  At that time  ,  the ATP software shall consider all track map has assigned the most restrictive temporary speed restriction .  Similarly  ,  if the ATP has long time not received information from the LC  ,  it shall consider the same restrictive TSR are applied . 
+According to  [ REF 8  ]   ,  ATP software should receive the TSR message from the LC  ,  as shown in Table  4  1  7  . 
+ 4  .  8  .  4  .  3  . 	LC->ATP : Version authorization
+The ATP shall send the versions of its software and data to the LC  ,  who uses this information to judge whether to authorize CC running on the relevant track . 
+According to  [ REF 8  ]   ,  ATP software should receive the version authorization message from the LC  ,  as shown in Table  4  1  8  . 
+ 4  .  8  .  4  .  4  . 	ATP->LC : Version report
+According to  [ REF 8  ]   ,  ATP sends version report to the LC  ,  as shown in  . 
+CCNV is responsible for the communication management with LC .  After adding the cycle time and checksum  ,  ATP shall collect and send the information to the CCNV  ,  which include the current software version  ,  the version of the configuration data  ,  the version of the all the ZC region in the track map  ,  
+ [ iTC_CC_ATP-SwRS- 0  4  4  3  ] 
+The ATP shall provide the VersionFromCCreport message to the CCNV  ,  who will forward them to the LC .  The version of the following vital components as  :
+ATP software version
+ATP vital parameters version
+ATP used ZC areas versions  ( Up to  1  6  versions maximum ) 
+ATP cycle time
+ [ iTC_CC_ATP-SwRS- 0  4  8  0  ] 
+Every cycle  ,  ATP software shall send IdenticalVersionReport to CCNV according to  [ REF 8  ]  .  The CCNV will forward this message to the LC . 
+ 4  .  8  .  5  . 	Software compatibility
+N / A
+ 4  .  8  .  6  . 	Hardware compatibility
+N / A
+ 4  .  8  .  7  . 	Implicit choices and justification
+N / A
+ 4  .  9  . 	Interface with CI Radio
+ [ iTC_CC_ATP-SwRS- 0  6  0  6  ] 
+The interface between ATP and CI shall be compliant with  [ REF 5  ]  document . 
+ 4  .  9  .  1  . 	Physical level
+ 4  .  9  .  2  . 	Protocol level
+Refer to  [ REF 5  ]  . 
+CC→CBI : CBI variant request
+CBI→CC : CBI variant report
+CBI→CC : CC variant request
+CC→CBI : CC variant report
+ 4  .  9  .  3  . 	Application level
+ 4  .  9  .  3  .  1  . 	ATP->CI : CBI variant request
+ [ iTC_CC_ATP-SwRS- 0  6  0  7  ] 
+ [ iTC_CC_ATP-SwRS- 0  6  0  8  ] 
+ 4  .  9  .  3  .  2  . 	CI->ATP : CBI variant report
+ [ iTC_CC_ATP-SwRS- 0  6  0  9  ] 
+ 4  .  9  .  3  .  3  . 	CI->ATP : CC variant request
+ [ iTC_CC_ATP-SwRS- 0  6  1  0  ] 
+ 4  .  9  .  3  .  4  . 	ATP->CI : CC variant report
+ [ iTC_CC_ATP-SwRS- 0  6  1  1  ] 
+ 4  .  9  .  4  . 	Software compatibility
+N / A
+ 4  .  9  .  5  . 	Hardware compatibility
+N / A
+ 4  .  9  .  6  . 	Implicit choices and justification
+N / A
+ 4  .  1  0  . 	Interface with PSD
+ [ iTC_CC_ATP-SwRS- 0  6  1  2  ] 
+The interface between ATP and PSD shall be compliant with  [ REF 5  ]  document . 
+ 4  .  1  0  .  1  . 	Physical level 
+ 4  .  1  0  .  2  . 	Protocol level
+CC→CBI : PSD  " Setting " 
+CBI→CC : PSD  " IO Status " 
+CC→CBI : SSE realignment
+CC→CBI : SSR realignment
+CBI→CC : SSE realignment
+CBI→CC : SSR realignment
+ 4  .  1  0  .  3  . 	Application level
+ 4  .  1  0  .  3  .  1  . 	ATP->CI : PSD setting
+According to  [ REF 5  ]   ,  ATP sends PSD setting message CIsetting to the CI  ,  as shown in Table  4  2  4  . 
+ [ iTC_CC_ATP-SwRS- 0  4  7  8  ] 
+According to the status of CommunicateWithPSD  ,  the conditions of establishment are as follow :
+If the CommunicateWithPSD at previous cycle was False and become True in this CYCLE  ,  ATP shall establish connection with CI as the FSFB 2  communication protocol . 
+Or else :  ,  if the CommunicateWithPSD is True  ,  ATP shall maintain the connection with CI . 
+If the connection with CI is interrupted  ,  ATP shall reestablish the communication . 
+Otherwise  ,  if the CommunicateWithPSD is False  ,  ATP shall end the connection . 
+ [ iTC_CC_ATP-SwRS- 0  4  7  9  ] 
+When the communication between ATP and CI has established  ,  ATP software every ATPsetting . PSDcommCycle cycle sends the PSD control command IdenticalCIsetting to CCNV according to  [ REF 5  ]  as FSFB 2  protocol . 
+IF PSDmanagerOrder_A . Id is valid  ,  ATP sends command to IdenticalCIsetting [  0  ]  ; 
+Else : if PSDmanagerOrder_B . Id is valid  ,  ATP sends command to IdenticalCIsetting [  1  ]  ; 
+ 4  .  1  0  .  3  .  2  . 	CI->ATP : PSD IO status
+ [ iTC_CC_ATP-SwRS- 0  4  7  2  ] 
+ATP software queries whether there is CI message transmitted from CCNV at every ATPsetting . PSDcommCycle .  ATP shall receive and store the message into CI_IOstatus :
+If there is no message from CI  ,  or the CRC  ,  or vital checksum of this message checked failure :
+If the communication with CI succeeded on previous cycles and the age is not more than FSFB 2 _MESSAGE_TIMEOUT  ,  ATP shall still use the valid previous CI message to update CI_IOstatus ; 
+Otherwise  ,  ATP shall set all CI status as restricted . 
+Otherwise  ,  ATP shall generate the structure of global variable such as Table  4  2  5  . 
+ 4  .  1  0  .  4  . 	Software compatibility
+N / A
+ 4  .  1  0  .  5  . 	Hardware compatibility
+N / A
+ 4  .  1  0  .  6  . 	Implicit choices and justification
+N / A
+ 4  .  1  1  . 	Interface with DLU
+ 4  .  1  1  .  1  . 	Role of interface
+This interface is used to ATP sending network addresses to the DLU just after power-up . 
+ [ iTC_CC_ATP-SwRS- 0  5  5  4  ] 
+The interface between ATP and DLU shall be compliant with  [ REF 1  2  ]  document . 
+ 4  .  1  1  .  2  . 	Physical level
+Refer to  [ REF 1  2  ]  . 
+ 4  .  1  1  .  3  . 	Protocol level
+Refer to  [ REF 1  2  ]  . 
+ 4  .  1  1  .  4  . 	Application level
+During initialization  ,  ATP software should send the network addressed to DLU as shown in Table  4  2  6  . 
+ 4  .  1  1  .  5  . 	Software compatibility
+N / A
+ 4  .  1  1  .  6  . 	Hardware compatibility
+N / A
+ 4  .  1  1  .  7  . 	Implicit choices and justification
+N / A
+ 4  .  1  2  . 	Interface with Project Data
+ 4  .  1  2  .  1  . 	Role of interface
+This interface is used by the ATP software to read project vital settings and track maps  ,  which generated by CC offline tool from project configurations . 
+ [ iTC_CC_ATP-SwRS- 0  5  5  5  ] 
+The interface between ATP and project data shall be compliant with  [ REF 1  1  ]  document . 
+ 4  .  1  2  .  2  . 	Physical level
+Refer to  [ REF 1  1  ]  . 
+ 4  .  1  2  .  3  . 	Protocol level
+Refer to  [ REF 1  1  ]  . 
+ 4  .  1  2  .  4  . 	Application level
+According to the  [ REF 1  1  ]   ,  the CC offline tool should read project configurations  ,  generate the binary project vital settings and track maps  ,  as shown in Table  4  2  7  . 
+ 4  .  1  2  .  5  . 	Software compatibility
+N / A
+ 4  .  1  2  .  6  . 	Hardware compatibility
+N / A
+ 4  .  1  2  .  7  . 	Implicit choices and justification
+N / A
+ 4  .  1  3  . 	Interface between two CPUs
+ 4  .  1  3  .  1  . 	Role of interface
+Two ATP software run on two PowerPC CPUs of the VLE- 2  board respectively .  They are used different VCP signature tables to avoid common mode failure .  The two CPUs connected by dual-ram and software can use this interface to synchronize their cycle time . 
+ 4  .  1  3  .  2  . 	Physical level 
+Refer to  [ REF 9  ]  . 
+ 4  .  1  3  .  3  . 	Protocol level
+Refer to  [ REF 9  ]  . 
+ 4  .  1  3  .  4  . 	Application level
+ [ iTC_CC_ATP-SwRS- 0  0  2  5  ] 
+Through the DPRAM between two CPUS of the VLE- 2  board  ,  ATP software should send information listed in Table  4  2  8  to the ATP on the other CPU . 
+ [ iTC_CC_ATP-SwRS- 0  0  2  6  ] 
+Through the DPRAM between two CPUS of the VLE- 2  board  ,  ATP software should read information listed in Table  4  2  9  from the ATP on the other CPU . 
+ 4  .  1  3  .  5  . 	Software compatibility
+N / A
+ 4  .  1  3  .  6  . 	Hardware compatibility
+N / A
+ 4  .  1  3  .  7  . 	Implicit choices and justification
+N / A
+ 4  .  1  4  . 	Interface with Memorized Location
+ 4  .  1  4  .  1  . 	Role of interface
+Memorized location function used to improve the efficiency and safety in parking are——after the power-on  ,  train can directly running under the ATP protection .  When the train completely stopped in sleeping areas  ,  ATP shall record the location and does not lost during power off .  And after power-on again  ,  the record can be read as the initialization position of the train . 
+ 4  .  1  4  .  2  . 	Physical level
+Will be involved in ATP software design document . 
+ 4  .  1  4  .  3  . 	Protocol level
+Will be involved in ATP software design document . 
+ 4  .  1  4  .  4  . 	Application level
+The location information need to memorize are shown in Table  4  3  0  . 
+ 4  .  1  4  .  5  . 	Software compatibility
+N / A
+ 4  .  1  4  .  6  . 	Hardware compatibility
+N / A
+ 4  .  1  4  .  7  . 	Implicit choices and justification
+N / A
+ 4  .  1  5  . 	Interface with VLE Hardware
+ 4  .  1  5  .  1  . 	Role of interface
+ATP software runs on the VLE- 2  board  ,  so it should use the hardware resources including vital clock  ,  file system etc . 
+ 4  .  1  5  .  2  . 	Physical level 
+Refer to  [ REF 9  ]  . 
+ 4  .  1  5  .  3  . 	Protocol level
+Refer to  [ REF 9  ]  . 
+ 4  .  1  5  .  4  . 	Application level
+ [ iTC_CC_ATP-SwRS- 0  0  2  8  ] 
+ATP can obtain the hardware resources shown in Table  4  3  1  . 
+ 4  .  1  5  .  5  . 	Software compatibility
+N / A
+ 4  .  1  5  .  6  . 	Hardware compatibility
+N / A
+ 4  .  1  5  .  7  . 	Implicit choices and justification
+N / A
+
+ 5  . 	FUNCTIONAL REQUIREMENTS
+ 5  .  1  . 	Description of Functions
+According to the level of the ATP functionality  ,  the software requirements divided into several functional blocks  ,  as shown in Table  5  1  . 
+ 5  .  2  . 	Description of Data
+ 5  .  2  .  1  . 	Constants for iTC production
+As a part of iTC  ,  ATP shall comply with the capacity limit of the system .  Therefore  ,  ATP software shall able to handle such a scale of information defined in Table 5 - 2  . 
+ 5  .  2  .  2  . 	Configurable data for projects
+For application to different projects  ,  ATP shall load vital settings before cycling operation  ,  as shown as Table  6  1   ,  the configurable data including the parameters of track  ,  specific demands for the project  ,  train characteristics etc .  Refer to  [ REF 1  1  ]  for the detail definition . 
+ 5  .  2  .  3  . 	Track map
+The track map onboard ATP used come from project configuration .  As shown in Figure  5  1   ,  the basic constitution unit of track map is block  ,  which managed by ZC ;  on the block  ,  a series of singularities represent physical devices such as signal  ,  switcher  ,  platform  ,  as well as permanent speed restrictions  ,  protected areas and other virtual restricted zones or limit points . 
+According to the design of track map  ,  an abscissa of a block means the distance from the block endpoint of the UP orientation  ,  as shown in Figure  5  2  .  The abscissa of the block starts from zero  ,  the UP orientation endpoint  ,  and increases along the UP orientation until reached the length of this block  ,  the DOWN orientation endpoint .  That is  ,  in a same block  ,  towards UP orientation  ,  the larger of the abscissa value  ,  the upper of the location ;  and vice versa .  If an abscissa exceeds the length of the block  ,  the actual location should be in the downstream block on the UP orientation ;  other hand  ,  if an abscissa is less than zero  ,  it should be in the downstream block on the DOWN orientation . 
+The UP or DOWN orientation in track map is defined by project . 
+Some of the singularities  ,  there status will change dynamically  ,  such as switch positions  ,  permissive or restrictive signals .  
+ 5  .  3  . 	F 1 - Manage System Information
+ 5  .  4  . 	F 1  1 -Acquire Configuration Data
+ 5  .  4  .  1  . 	Inputs
+ 5  .  4  .  2  . 	Locals
+ 5  .  4  .  3  . 	Processing
+ 5  .  4  .  3  .  1  . 	Get CC data plug information
+In the same project  ,  the ATP software running on different vehicles is identical .  When communicating with external systems  ,  the ATP depends on the CC SSID to identify itself ;  meanwhile  ,  it needs to know itself in the train END_ 1  or END_ 2  ;  and runs in the CPU 1  or CPU 2  module of the VLE- 2  board .  These information are stored in CC data plug where installed on each CPU module of the VLE- 2  board .  The maintenance staff guarantees the correctness and uniqueness of CC data plug . 
+ [ iTC_CC_ATP-SwRS- 0  0  5  3  ] 
+On initialization  ,  ATP generates TrainType according to DataPlugContent . CCTrainType from the CC data plug . 
+ [ iTC_CC_ATP-SwRS- 0  0  5  4  ] 
+On initialization  ,  ATP generates CoreId according to DataPlugContent . CCCoreId read from the CC data plug . 
+ [ iTC_CC_ATP-SwRS- 0  6  1  3  ] 
+Core id for CC on the distant cab . 
+ [ iTC_CC_ATP-SwRS- 0  0  5  5  ] 
+On initialization  ,  ATP generates SubSystemId according to DataPlugContent . CC_SSID from the CC data plug . 
+ 5  .  4  .  3  .  2  . 	Check the project setting
+ATP software should apply to different projects .  For project-related configuration parameters  ,  track maps and other information  ,  generated by CC offline tool  ,  are stored in the VLE- 2  board designated storage space .  When power on  ,  the ATP software shall read these configurations and perform for related functions .  Before using  ,  the ATP shall verify the correctness of these parameters and track maps  ,  and shall ensure the consistency of these data with the other CPU module and with the redundant ATP on the other END of train . 
+ [ iTC_CC_ATP-SwRS- 0  0  5  7  ] 
+According with train type  ,  ATP software shall compute the VCP check words of the project vital setting DATA . VES  ,  which generated by CC offline tools . 
+If check words are correct  ,  ATP software shall read the vital setting and convert to the global variable ATPsetting according to the Table  6  1  ; 
+Otherwise  ,  the ATP shall cease to run . 
+ [ iTC_CC_ATP-SwRS- 0  0  5  8  ] 
+According with train type  ,  ATP software shall read DATA . VES and detect the track map data with VCP which was generated by CC offline tools .  If the data is correct  ,  ATP shall generate TrackMap with the structure as refer to  [ REF 1  1  ]  ;  Otherwise  ,  ATP cannot continue to operate . 
+ [ iTC_CC_ATP-SwRS- 0  7  5  5  ] 
+Some parts of codes in DATA . VES  ,  related to input and output functions  ,  as project configuration data  ,  ATP links them during initialization and generates Offline structure as Table  6  3   ,  refer to  [ REF 1  1  ]  . 
+NOTE：
+For the configuration parameters and track map  ,  generated by the CC offline tool  ,  if there is error for the ATP reading  ,  or there is any changes during the processing  ,  the VCP coding calculation will be conducted the wrong data  ,  which will causing the VIOM output is set as restricted status .  
+ [ iTC_CC_ATP-SwRS- 0  5  3  6  ] 
+SafeApplicationVersion stands for the version of ATP software .  The version of ATP software is defined in source code .  The version shall be update whenever the code changed . 
+ [ iTC_CC_ATP-SwRS- 0  5  3  7  ] 
+After ATP gets the offline parameters and track map from the CC data plug  ,  it needs to compare this information with the other CPU module  ,  which represented by the term of IdenticalVersionOfDualCPU .  If the information is as same  ,  ATP shall set IdenticalVersionOfDualCPU as True ;  otherwise  ,  it will set IdenticalVersionOfDualCPU as False .  
+TrainType  ,  the train type from data plug ; 
+CoreId  ,  the train end identification from data plug ; 
+SubSystemId  ,  the train identification from data plug ; 
+TrackMap  ,  the version number of each ZC region in line map ; 
+ATPsetting  ,  the version number for the configuration data ; 
+SafeApplicationVersion  ,  the version of ATP software . 
+ [ iTC_CC_ATP-SwRS- 0  0  5  9  ] 
+After all above-mentioned information has corrected  ,  and correspondingly  ,  ATP will generate TrainKnown information .  If TrainKnown considered as False  ,  ATP shall set all output ports as restricted . 
+ 5  .  4  .  3  .  3  . 	Parse the CCNV information
+ [ iTC_CC_ATP-SwRS- 0  1  2  5  ] 
+Through the communication with CCNV  ,  ATP judges NonVitalRequestreceived from CCNV and generates NonVitalRequestReady If received a new message . 
+ [ iTC_CC_ATP-SwRS- 0  1  2  6  ] 
+ATOcontrolTimeValid stands for the effectiveness of CCNV message .  If there is no updating CCNV message past the CCNV_VALIDITY_CYCLES  ,  ATOcontrolTimeValid is set as False . 
+ 5  .  4  .  4  . 	Outputs
+ 5  .  5  . 	F 1  2 -Manage Train Status
+ 5  .  5  .  1  . 	Inputs
+ 5  .  5  .  2  . 	Locals
+ 5  .  5  .  3  . 	Processing
+Every cycle  ,  ATP software queries whether there are vital rolling stock inputs messages transmitted from CCNV  ,  which acquired by at most four VIOM from both END_ 1  and END_ 2  .  The structure of the inputs message are Table  4  1  1   ,  and ATP shall receive and store them into VIOM 1 VitallInput . or VIOM 2 VitalInput .  The receiving and storing rules are following :
+If there is no message from VIOM  ,  or the CRC or vital checksum of the received message failed  ,  ATP shall discard this message ; 
+Otherwise  ,  generate the structure of global variable such as ST_VIOM_INPUT . 
+ 5  .  5  .  3  .  1  . 	VIOM 1  -> ATP
+ [ iTC_CC_ATP-SwRS- 0  4  6  8  ] 
+ATP determines whether received a safety input message from VIOM 1  . 
+During the calculation  ,  the value viomId is either zero or one  ,  which represents one of the two VIOM in the train END_ 1  . 
+ [ iTC_CC_ATP-SwRS- 0  0  6  0  ] 
+Through the communication  ,  ATP gets the vital input message from VIOM 1  and decides the time effectiveness and the correctness of the sequence of the message  ,  which defined as VIOM 1 VitalInputsAvailable . 
+During the calculation  ,  the value ViomId is either zero or one  ,  which represents one of the two VIOM in the train END_ 1  .  
+ [ iTC_CC_ATP-SwRS- 0  7  4  0  ] 
+Records the survival time of received vital inputs from VIOM 1  . 
+ [ iTC_CC_ATP-SwRS- 0  5  7  2  ] 
+ATP records the latest cycle time information of VIOM in END_ 1  by the term LatestVIOM 1 LoopHourVIOM . 
+In initialization  ,  set LatestVIOM 1 LoopHourVIOM as the zero ; 
+If receiving an available VIOM 1  message  ,  or a new message and the previous one has invalid  ,  ATP will set the related value of LatestVIOM 1 LoopHourVIOM as the viomLoopHour of the message .  
+Otherwise  ,  LatestVIOM 1 LoopHourVIOM keeps unchanged . 
+ 5  .  5  .  3  .  2  . 	VIOM 2  -> ATP
+ [ iTC_CC_ATP-SwRS- 0  6  1  4  ] 
+ATP determines whether received a safety input message from VIOM 2  . 
+ [ iTC_CC_ATP-SwRS- 0  4  4  9  ] 
+Through the communication  ,  ATP gets the vital input message from VIOM 2  and decides the time effectiveness and the correctness of the sequence of the message  ,  which defined as VIOM 2 VitalInputsAvailable . 
+During the calculation  ,  the value i is either zero or one  ,  which represents one of the two VIOM in the train END_ 2  .  
+ [ iTC_CC_ATP-SwRS- 0  7  4  1  ] 
+Records the survival time of received vital inputs from VIOM 2  . 
+ [ iTC_CC_ATP-SwRS- 0  5  7  3  ] 
+ATP records the latest cycle time information of VIOM in END_ 2 by the term LatestVIOM 2 LoopHourVIOM . 
+In initialization  ,  set LatestVIOM 2 LoopHourVIOM as the zero ; 
+If receiving an available VIOM 1  message  ,  or a new message and the previous one has invalid  ,  ATP will set the related value of LatestVIOM 2 LoopHourVIOM as the viomLoopHour of the message .  
+Otherwise  ,  LatestVIOM 2 LoopHourVIOM keeps unchanged . 
+ 5  .  5  .  3  .  3  . 	Identical VIOM inputs
+ATP shall perform logical  " or "  operation between two VIOM messages at each cab  ,  and generate one identical VIOM input message for each cab  ,  as shown in Table  5  4  .  The message as an interface  ,  are available to offline generated code  ,  defined in  [ REF 1  1  ]  . 
+ [ iTC_CC_ATP-SwRS- 0  5  3  8  ] 
+ATP determines whether the vital inputs message from VIOM 1  valid . 
+ [ iTC_CC_ATP-SwRS- 0  5  3  9  ] 
+ATP determines whether the vital inputs message from VIOM 2  valid . 
+ [ iTC_CC_ATP-SwRS- 0  0  6  1  ] 
+For four vital input messages from VIOM 1  and VIOM 2   ,  ATP shall deal with it comprehensively and generate the IdenticalInputs information in this cycle for calculation of other modules  ,  structured as  .  For both of VIOM message in the same END  ,  ATP shall consider the reliability and use  " logic OR "  for judge the status of each port :
+If both of VIOM message from one train end is invalid  ,  the IdenticalInputs of this end is also ineffective .  
+If only one VIOM message from one train end is invalid  ,  the IdenticalInputs is equal to this effective VIOM message . 
+If there is at least one VIOM message of a port is on permissive  ,  ATP shall regard the corresponding port of this train END as permissive status .  
+Otherwise  ,  ATP shall regard this port as restrictive status in the IdenticalInputs . 
+According to the project configuration  ,  the value from different input ports can participate in logic operation to get desired results  ,  as shown in Figure  5  4  . 
+All configurable inputs ATP supported are shown in Table  5  5  .  All these variables are generated by offline tools and as a part of the project data read by ATP during initialization . 
+ 5  .  5  .  3  .  4  . 	Train coupled status management
+ [ iTC_CC_ATP-SwRS- 0  0  7  5  ] 
+CoupledByEnd 1  or CoupledByEnd 2  shows that both ends of train connect with other trains .  If the project is not configured with the capture of coupling input  ,  it is certain that the train does not connect with other trains .   
+ [ iTC_CC_ATP-SwRS- 0  8  0  2  ] 
+TrainNotCoupled
+ [ iTC_CC_ATP-SwRS- 0  7  8  9  ] 
+TrainCoupledType
+TRAIN_COUPLED_UNKNOWN
+TRAIN_NO_COUPLED
+TRAIN_COUPLED_END 1 
+TRAIN_COUPLED_END 2 
+ [ iTC_CC_ATP-SwRS- 0  7  9  0  ] 
+CoupledTypeInconsistent
+ [ iTC_CC_ATP-SwRS- 0  7  9  2  ] 
+MatchRebootCondition
+ 5  .  5  .  4  . 	Outputs
+ 5  .  6  . 	F 1  3 -Manage Loop Hour with Distant ATP
+This module handles information from the redundant ATP  ,  and generates loop hour as the basis of validity judgment . 
+ 5  .  6  .  1  . 	Inputs
+ 5  .  6  .  2  . 	Locals
+ 5  .  6  .  2  .  1  . 	ProcessingLoop hour management
+Since power up  ,  ATP shall maintain its loop hour as a label used to monitor the timeline of communication  ,  according to the cycle number and the cab where ATP settled .  For both ends of the cab of the ATP  ,  they use different loop hour initial value  ,  and there is no intersection between the ranges .  Thus  ,  according to the message loop hour  ,  the source of the message sent from which ATP can distinguish . 
+ [ iTC_CC_ATP-SwRS- 0  1  4  4  ] 
+ATPtime stands for the ATP loop hour of this train END . 
+Based on CoreId  ,  ATP initialize ATPtime as the initiative value of END_ 1  or END_ 2  ; 
+If the value exceeds the maximum loop hour  ,  ATP shall set it as the initiative value ;  
+Otherwise  ,  add one for each cycle .  
+ 5  .  6  .  2  .  2  . 	loop hour management for the other ATP
+The ATP software needs to maintain the redundant ATP cycle time for monitoring the effectiveness of the message sent to the redundant side .  Taking into account the transmission delay time  ,  the redundant ATP time should be within the maximum and minimum range . 
+ [ iTC_CC_ATP-SwRS- 0  6  1  5  ] 
+OtherATPmessageReceived
+The message transmitted from the distant ATP in the other END shall be protected by check words .  And before using the information  ,  ATP shall verify the check words . 
+ [ iTC_CC_ATP-SwRS- 0  0  7  8  ] 
+OtherATPmessageAvailable
+OtherATPmessageAvailable  ,  ATP shall judge the effectiveness of message from the redundant ATP  ,  shown as following pseudo-codes :
+ [ iTC_CC_ATP-SwRS- 0  6  1  6  ] 
+LastOtherATPmessageAge
+ [ iTC_CC_ATP-SwRS- 0  5  4  0  ] 
+OtherATPmessageValid represents the effectiveness of the messages from redundant ATP .  If this message is invalid  ,  ATP will set OtherATPmessageValid as False ;  otherwise  ,  it is set as True .  
+ [ iTC_CC_ATP-SwRS- 0  0  8  1  ] 
+The OtherATPminTime stands for the local ATP maintained minimum time of the redundant ATP .  The setting rule is as following :
+In initialization  ,  ATP set the OtherATPminTime as default value based on the CoreId of the redundant ATP . 
+Or else :  ,  if the updating message from the new redundant ATP in this cycle is available  ,  ATP will update OtherATPminTime as the current time in the message .  
+Or else :  ,  if the redundant ATP message is still effective  ,  ATP will add  1  in the OtherATPminTime until it is out of bound  ,  and set is as initialization value .  
+Or else :  ,  If the received a new redundant ATP message  ,  but it was not available  ,  ATP shall update OtherATPminTime as in the message . 
+Otherwise  ,  accumulate OtherATPminTime . 
+ [ iTC_CC_ATP-SwRS- 0  0  8  3  ] 
+The OtherATPmaxTime stands for the local ATP maintained maximum time of the redundant ATP .  The rules to update OtherATPmaxTime are similar with OtherATPminTime except that when received a new message from the redundant ATP  ,  the OtherATPmaxTime shall add the maximum transmission delay in network . 
+ 5  .  6  .  2  .  3  . 	Parse distant ATP information
+ [ iTC_CC_ATP-SwRS- 0  0  8  0  ] 
+OtherATP  ,  parse and store messages from the distant ATP . 
+In initialization or the message has expired  ,  set all variables as default value ; 
+when new message available  ,  set the corresponding value from the new message ; 
+otherwise  ,  remain unchanged . 
+ 5  .  6  .  3  . 	Outputs
+ 5  .  7  . 	F 1  4 -Manage Variants in Block Mode
+ 5  .  7  .  1  . 	Inputs
+ 5  .  7  .  2  . 	Locals
+ 5  .  7  .  3  . 	Processing
+This module mange the variants used in block mode  ,  including the BM beacon and the CBI radio . 
+
+ 5  .  7  .  3  .  1  . 	Determine block mode
+ [ iTC_CC_ATP-SwRS- 0  0  6  7  ] 
+BlockModeUsed represents that either of train end chooses BM mode .  
+ [ iTC_CC_ATP-SwRS- 0  0  6  6  ] 
+The status of BMvariantValidWhileTemporallyValid shows whether it is in the BM mode .   
+ 5  .  7  .  3  .  2  . 	BM variants received from beacon
+In the block mode  ,  the variants come from the parsing of BM beacon message .  For each BM beacon  ,  has a specific orientation and can store  1  6  variants at most .  For the content and validity of each variant is defined in the off-line data .  During the block mode  ,  ATP shall only store the last read BM variants with the same direction as the train moving . 
+ [ iTC_CC_ATP-SwRS- 0  1  4  6  ] 
+BeaconVariantsUpdating used to determine ATP whether to update the BM variants in this cycle . 
+If all the following conditions are fulfilled  ,  ATP shall set BeaconVariantsUpdating as True :
+The current operational mode is BLOCK MODE ; 
+And train moved and ATP received a BM beacon in this cycle ; 
+And the train is either not localized  ,  or the direction of the BM variants is as same as the orientation of the train front end . 
+Otherwise  ,  ATP shall set BeaconVariantsUpdating as False . 
+ [ iTC_CC_ATP-SwRS- 0  6  1  7  ] 
+BMbeaconReadAge
+ [ iTC_CC_ATP-SwRS- 0  1  4  7  ] 
+The structure of array ATP stored BMbeaconVariants are ST_BM_VARIANT .  The rules to update the BM variants are as follows :
+if the BMbeaconReadAge is larger than the ATPsetting . VariantsBMfullValidityTime  ,  ATP shall set all BM variants as restricted status . 
+Else If the BeaconVariantsUpdating is True  ,  then ATP update the BMbeaconVariants by the new beacon . 
+Otherwise  ,  keep BMbeaconVariants unchanged . 
+NOTES :
+There is a situation that ATP read one BM beacon as the second beacon for ATP initializing location  ,  and the direction of this BM beacon is opposite with the train movement . 
+ [ iTC_CC_ATP-SwRS- 0  6  1  8  ] 
+BMbeaconVariantValue
+ [ iTC_CC_ATP-SwRS- 0  1  4  8  ] 
+UsedBMbeaconId records the used BM variants came from which BM beacon :
+When one of the following conditions fulfilled  ,  ATP clear the UsedBMbeaconId :
+initialization  , 
+the BLOCK MODE variant is not temporally valid  , 
+the direction of the used BM beacon is not as same as train front orientation  , 
+the train is not localized . 
+Or else :  ,  when received a valid BM beacon  ,  ATP update UsedBMbeaconId ; 
+Otherwise  ,  keep this value unchanged . 
+ 5  .  7  .  3  .  3  . 	BM variants received from CBI
+ [ iTC_CC_ATP-SwRS- 0  6  1  9  ] 
+BMvariantValidLastRisingAge  , 
+ [ iTC_CC_ATP-SwRS- 0  6  2  0  ] 
+CBIvariantReportReceived
+ [ iTC_CC_ATP-SwRS- 0  6  2  1  ] 
+CBIvariantReportAvailable
+ [ iTC_CC_ATP-SwRS- 0  6  2  2  ] 
+CBIvariantReportLastAge
+ [ iTC_CC_ATP-SwRS- 0  6  2  3  ] 
+BMcbiVariants
+ [ iTC_CC_ATP-SwRS- 0  6  2  4  ] 
+CBIvariantAge
+ [ iTC_CC_ATP-SwRS- 0  6  2  5  ] 
+CBIvariantLowValidity
+ [ iTC_CC_ATP-SwRS- 0  6  2  6  ] 
+BMcbiVariantValue
+ [ iTC_CC_ATP-SwRS- 0  7  5  4  ] 
+AppliedCBIvariantLoopHour
+ 5  .  7  .  3  .  4  . 	BM variants outputs
+ [ iTC_CC_ATP-SwRS- 0  6  2  7  ] 
+CBIvariantMoreAvailableThanBeacon
+ATP shall use the more recent message from beacons and CBI radio . 
+ [ iTC_CC_ATP-SwRS- 0  6  2  8  ] 
+BMvariantValue
+ [ iTC_CC_ATP-SwRS- 0  6  2  9  ] 
+BMvariantRemainingTime
+ 5  .  7  .  4  . 	Outputs
+ 5  .  8  . 	F 1  5 -Manage Variants in CBTC Mode
+ 5  .  8  .  1  . 	Inputs
+ 5  .  8  .  2  . 	Locals
+ 5  .  8  .  3  . 	Processing
+ 5  .  8  .  3  .  1  . 	Version authorization by LC
+ [ iTC_CC_ATP-SwRS- 0  6  3  0  ] 
+VersionAuthorizationReceived
+ [ iTC_CC_ATP-SwRS- 0  1  0  3  ] 
+VersionAuthorizationAvailable
+ [ iTC_CC_ATP-SwRS- 0  4  5  3  ] 
+LastVersionReportAge
+ [ iTC_CC_ATP-SwRS- 0  1  0  4  ] 
+ReceivedVersionMessages
+ [ iTC_CC_ATP-SwRS- 0  6  3  1  ] 
+VersionAuthorizedByLC
+ 5  .  8  .  3  .  2  . 	ZC message availability
+ [ iTC_CC_ATP-SwRS- 0  0  9  3  ] 
+SameVersionWithDistantCore
+The local ATP shall compare the information from the redundant ATP to ensure the consistency  ,  which includes versions of vital software  ,  project configuration data and the track map .  
+ [ iTC_CC_ATP-SwRS- 0  6  3  2  ] 
+EOAReportReceived
+ [ iTC_CC_ATP-SwRS- 0  1  0  5  ] 
+ZCmessageReady represents that an available EOA and variants message from ZC received in this cycle . 
+ [ iTC_CC_ATP-SwRS- 0  1  0  8  ] 
+LastEOAReportAge represents the value calculated by current ATP time minus the previous loc-report number and the EOA consuming time in ZC .  
+ [ iTC_CC_ATP-SwRS- 0  1  0  6  ] 
+EOAgroundAge stands for the number of CC cycle when receiving the EOA information . 
+ [ iTC_CC_ATP-SwRS- 0  1  0  7  ] 
+ReceivedEOAreport
+ 5  .  8  .  3  .  3  . 	Variants in CBTC mode
+ [ iTC_CC_ATP-SwRS- 0  1  0  9  ] 
+VariantGroundAge shows the survival time of the variants in ZC . 
+ [ iTC_CC_ATP-SwRS- 0  6  3  3  ] 
+VariantReportReceived
+ [ iTC_CC_ATP-SwRS- 0  1  1  0  ] 
+ReceivedVariantReport
+NOTES：
+In the CBTC mode  ,  ATP gets the variants by parse the ZC message .  The variants sending from ZC are categorized by line section .  Moreover  ,  it will send the line section variants in the current ZC area and the adjacent one .  ATP will record and check the variants and maintains the time effectiveness . 
+ [ iTC_CC_ATP-SwRS- 0  1  5  0  ] 
+CBTCvariantValue
+ATP shall maintain the validation of CBTC variants message from ZC .  if the validation timeout  ,  ATP should set all CBTC variants to restrictive state . 
+ [ iTC_CC_ATP-SwRS- 0  6  3  4  ] 
+VariantValue
+ 5  .  8  .  4  . 	Outputs
+ 5  .  9  . 	F 2 -Measure Train Kinematics
+ 5  .  1  0  . 	F 2  1 -Manage Interface with VPB
+ 5  .  1  0  .  1  . 	Inputs
+ 5  .  1  0  .  2  . 	Locals
+ 5  .  1  0  .  3  . 	Processing
+ 5  .  1  0  .  3  .  1  . 	Odometer information
+The consistency of cog count and cog code makes sure the safety during the processing of coded odometer  ,  so ATP needs to save the value of cog count and cog code in each interrupt as shown in Table  5  6   ,  and judge it in the main task .  However when the coded odometer does not move  ,  ATP needs to driver VPB board in order to test every sensor in the odometer .  In addition  ,  ATP needs to judge the working status of odometer through the conduction status returning from the sensor . 
+ [ iTC_CC_ATP-SwRS- 0  1  1  3  ] 
+OdometerImm records the changes of VPBWrite register in each interrupt  ,  structured as Table  5  6  . 
+ [ iTC_CC_ATP-SwRS- 0  1  1  4  ] 
+In the interrupt  ,  when the TopLocValid detected by VPB board regarded as True  ,  OdometerImm . TopLocValid and BeaconMsgReady set as True .  Adding TopLocCounter  ,  the data from beacon savor is saved into BeaconMsgByte [ MAX_BEACON_DATA_SIZE ]  . 
+ [ iTC_CC_ATP-SwRS- 0  5  5  7  ] 
+SensorTestFlag regarded as the symbol whether ATP in CPU  1  needs to check the sensor .  In the interval  ,  if the value of CBKWrite . CogCounterReg is not changed in the continuous SENSOR_TEST_START_TIME  ,  and the WheelFilteredStopped was False at last cycle  ,  the ATP of CPU 1  in VLE- 2  board need to set SensorTestFlag as True and send the data to the ATP of CPU 2  . 
+ [ iTC_CC_ATP-SwRS- 0  5  5  8  ] 
+For the ATP of CPU 1  in VLE- 2  board  ,  if it sets the SensorTestFlag of pervious end of cycle as True  ,  it need to set the value of OdometerImm . D 1  / D 2  / D 3  based on the settled sequence in each interrupt  ,  and set the SensorTesting as True . 
+D 1  /  2  /  3  shall set to POWER_ON at every other interrupts ; 
+In other interrupt  ,  D 1  /  2  /  3  shall be set to pseudo random value . 
+ [ iTC_CC_ATP-SwRS- 0  5  5  9  ] 
+For the ATP of CPU 2   ,  if the SensorTestFlag from CPU 1  is True  ,  it needs to read the D 1  /  2  /  3  registers of VPB- 2  board and obtain the current testing value of D 1  /  2  /  3  . 
+ [ iTC_CC_ATP-SwRS- 0  1  1  5  ] 
+During the sensor test performing  ,  both ATP in the two CPUs of VLE- 2  shall detect the consistency of the test result according to the state of C 1  /  2  /  3  in the two continuous interrupt .  Accordingly  ,  ATP determines the state of three sensors : A 1   ,  A 2   ,  A 3  . 
+Based on the above three sensors’ status A 1  /  2  /  3   ,  ATP determines the status of the odometer as following conditions :
+If any one of A 1  /  2  /  3  is SENSOR_WRONG  ,  then ATP consider the odometer as error in this interrupt and set the OdometerImm . TestResultas TEST_INCONSISTENT ; 
+If all of A 1  /  2  /  3  are SENSOR_CONDUCT  ,  then ATP consider the odometer as error in this interrupt and set the OdometerImm . TestResultas TEST_INCONSISTENT ; 
+If all of A 1  /  2  /  3  are SENSOR_BLOCKED  ,  then ATP consider the odometer as error in this interrupt and set the OdometerImm . TestResultas TEST_INCONSISTENT ; 
+If all of A 1  /  2  /  3  are as same as the result at last interrupt respectively  ,  then ATP consider the odometer as stop in this interrupt and set the OdometerImm . TestResultas TEST_STOPPING ; 
+If the TEST_STOPPING has lasted more than SENSOR_TEST_IMMOBILE_THRESHOLD  ,  the ATP consider the odometer standstill  ,  and set OdometerImm . TestResultas TEST_IMMOBILE ; 
+If any one of A 1  /  2  /  3  is different with the result at last interrupt  ,  then ATP consider the odometer rolling  ,  and set the OdometerImm . TestResultas TEST_FLOATING . 
+When the odometer test result is either TEST_INCONSISTENT or TEST_FLOATING  ,  ATP shall stop the sensor test and set OdometerImm . SensorTesting as False for this interrupt  ,  and set SensorTestFlag as False for this cycle . 
+NOTES：
+Because of the design restriction  ,  only the FPGA 1  in the VPB- 2  board can send the testing sequence D 1  /  2  /  3  to the sensor  ,  and meanwhile the FPGA 1  will forward the info to the FPGA 2  in the VPB- 2  so that the CPU 2  in the VLE- 2  can read .  Both of the FPGA in the VPB- 2  board will have the same process for the sensor testing result C 1  /  2  /  3  . 
+ [ iTC_CC_ATP-SwRS- 0  1  1  6  ] 
+In the specific T_LOCK_ODOMETER  ,  the OdometerImm of all intervals need to be saved into LockedOdometer [ ATP_INTERRUPT_NB ]  with the index as ImmediateNb ;  The value of BeaconMsgReady  ,  TopLocCounter and BeaconMsgByte should be recorded by using LockedBeaconMsgReady  ,  LockedTopLocCounter and LockedBeaconMsgBytefor the main task . 
+ [ iTC_CC_ATP-SwRS- 0  5  9  0  ] 
+The ATP software in different CPUs shall synchronize the information get from the VPB board  ,  with following rules : 
+For CogCounter :
+If the CogCounter read by two CPUs are different at the same interrupt  ,  ATP shall take the large one as the result ; 
+ATP shall use the CPU's CogCode as same as CogCounter . 
+For TopLocValid :
+Only the cog counter latched by TOPLOC is between the before and after cog counter   ,  TOPLOC is considered valid
+If the top-loc happened in adjacent interrupt between two CPUs  ,  the former one shall use to calculate the CogPositionBeforeTopLoc  ,  and the latter to calculate the CogPositionAfterTopLoc ; 
+If the top-loc difference are more than one interrupt  ,  ATP shall consider it as invalid . 
+ 5  .  1  0  .  3  .  2  . 	Beacon message
+When the Beacon antenna passes the upside of beacon  ,  it will generate the top-loc signal and send it to VPB board .  While the ATP gets this signal  ,  it will lock the odometer cog counter at this moment  ,  and will obtain  ,  parse and check the beacon message . 
+ [ iTC_CC_ATP-SwRS- 0  1  2  0  ] 
+BeaconChecksumFailure judges whether the checksum of beacon message is correct or not .  
+In the main task  ,  if LockedBeaconMsgReady is True  ,  LockedBeaconMsgByteneed to be detected  ,  including validity of ATCkey and calculation of the SACEM checksum of beacon . 
+ATP shall reject each beacon message which vital checksum is corrupted . 
+ [ iTC_CC_ATP-SwRS- 0  1  1  7  ] 
+In the main task of ATP  ,  if the status of LockedBeaconMsgReady in the interrupt is True  ,  and the BeaconChecksumFailure is False  ,  ATP shall set the BeaconMessageReceive as True ;  and vice versa .  If ATP receives more than one beacons in this cycle  ,  it will deal with the last beacon and based on this data to update the BeaconMessageReceive . 
+ [ iTC_CC_ATP-SwRS- 0  1  1  8  ] 
+BeaconCount represents the accumulated number of received Top-loc signal from power on to current cycle . 
+ [ iTC_CC_ATP-SwRS- 0  1  1  9  ] 
+If the BeaconMessageReceive is True  ,  ATP shall parse the value of LockedBeaconMsgByte and generate BeaconMessage with structure as ST_BEACON_MSG :
+ [ iTC_CC_ATP-SwRS- 0  1  2  1  ] 
+If the status of BeaconMessageReceive is True  ,  the BeaconMessage . ID is obtained by LockedBeaconMsgByte ;  Otherwise  ,  keep it unchanged . 
+BEACON_ID_BITS represents the index of beacon ID in the beacon message defined in  [ REF 4  ]  . 
+ [ iTC_CC_ATP-SwRS- 0  1  2  2  ] 
+If the BeaconMessageReceive is True  ,  the variants is come from LockedBeaconMsgByteand ATP set as BeaconMessage . Variants [ MAX_BM_VARIANT_NB ]  ;  if there is no beacon read at the end of cycle  ,  there is no changes . 
+BM_VARIANTS_BIT_ 0  .  .  . BM_VARIANTS_BIT_ 1  5  represents the index of BM beacon variants defined in  [ REF 4  ]  . 
+ [ iTC_CC_ATP-SwRS- 0  1  2  3  ] 
+If the BeaconMessageReceive is True  ,  the default message is judged by LockedBeaconMsgByteand ATP set the BeaconMessage . DefaultMessage ;  if there is no new beacon read  ,  it keeps unchanged . 
+DEFAULT_MESSAGE_BIT represents the index of beacon that judges default message  ,  which defined in the  [ REF 4  ]  . 
+ [ iTC_CC_ATP-SwRS- 0  1  2  4  ] 
+If the BeaconMessageReceive is True  ,  it is feasible to judge whether the variants are available through LockedBeaconMsgByte and ATP set as BeaconMessage . BlockModeVariantAvailable ;  If there is no new beacon read  ,  it keeps invariable .  
+BLOCK_MODE_VARIANT_AVAILABLE_BIT stands for the index of the beacon variants in the beacon message defined in  [ REF 4  ]  .  
+ [ iTC_CC_ATP-SwRS- 0  0  4  9  ] 
+At each cycle  ,  ATP shall provide to beacon device the ATCkey in order to be able to control message freshness . 
+ [ iTC_CC_ATP-SwRS- 0  7  6  7  ] 
+ 5  .  1  0  .  4  . 	Outputs
+ 5  .  1  1  . 	F 2  2 -Monitor the Odometer
+ 5  .  1  1  .  1  . 	Inputs
+ 5  .  1  1  .  2  . 	Locals
+ 5  .  1  1  .  3  . 	Processing
+In every cycle of main task  ,  according to coded odometer information of each interrupt latch in the last cycle  ,  ATP software shall calculate the kinematic parameters of the wheel .  That is to say  ,  ATP shall judge the cog numbers in this cycle according to the value in the register .  If ATP did not detect the move of odometer  ,  it will check whether the wheel is completely static based on the sensor testing .  According to the design of coded odometer  ,  it is impossible that three sensors are in conduct or blocked at the same time . 
+ [ iTC_CC_ATP-SwRS- 0  5  9  2  ] 
+The ATP software needs to calculate the expected cog code with  8  bits  ,  according to the encoding characteristic of the disc code and the direction of odometer rotation . 
+When the odometer initialization  ,  the expected CompCogCode shall be set as initial CogCode ; 
+Since then  ,  for one cog rotated in interrupt  ,  the corresponded bit shall be shift as following rules :
+if the cog increased in adjacent interrupts  ,  the CompCogCode shall be shift a bit toward right from high to low ;  shift out the lowest one and set the new highest bit as C 4 array [ C 4 ArrayIndex ]   ,  and update C 4 ArrayIndex . 
+otherwise  ,  if the cog decreased  ,  the CompCogCode shall be shift a bit toward left from low to high ;  shift out the highest bit and set the C 4 array [ C 4 ArrayIndex ]  as the new lowest one  ,  and update C 4 ArrayIndex accordingly . 
+In which  ,  C 4 ArrayIndex is the current cog index  ,  ranging from  0  to  9  9  .  C 4 array [ C 4 ArrayIndex ]  is the array of disc codes  ,   "  1  "  meaning conduction and  "  0  "  indicating blocked  ,  for details see  [ REF 4  ]  . 
+ [ iTC_CC_ATP-SwRS- 0  1  6  4  ] 
+ATP determines the odometer position ready according to the matching of the CompCogCode and CogCode locked in each interrupt . 
+In initialization  ,  the OdometerCogPositonReady shall be False ; 
+Or else :  ,  if the OdometerCogPositonReady was False  ,  then only after the odometer rotated reversely or WheelFilteredStopped and re-turned continuous toward the same direction after  8  cogs  ,  ATP shall re-initialize the Counter-Code matching relation and set OdometerCogPositonReady as True ; 
+Or else :  ,  if CogCode is different with CompCogCode in one of interrupt of the cycle  ,  ATP shall set OdometerCogPositonReady as False ; 
+Otherwise  ,  ATP keep OdometerCogPositonReady unchanging . 
+ [ iTC_CC_ATP-SwRS- 0  1  6  5  ] 
+TeethCounter used as the odometer cog value in one deferred task  ,  which is the difference of the CogCounter in the last interrupt of adjacent cycle .  The calculation of the TeethCounter shall consider the installation direction of the odometer and the register range of the CogCounter . 
+NOTES :
+TeethCounter is a signed value .  If TeethCounter greater than  0   ,  then means the odometer rotating toward to the train END_ 1  direction ;  other hand  ,  if it less than  0   ,  then means the odometer rotating toward to the END_ 2  . 
+ [ iTC_CC_ATP-SwRS- 0  1  6  6  ] 
+If a beacon with top-loc received in this cycle  ,  ATP shall record the cog position of the interrupt when and just before the top-loc happen :
+CogPositionBeforeTopLoc  ,  the CogCounter in the interrupt just before the top-loc happen ; 
+CogPositionAfterTopLoc  ,  the CogCounter in the interrupt when the top-loc happen . 
+Which  ,  i means the interrupt received top-loc signal . 
+ [ iTC_CC_ATP-SwRS- 0  1  6  7  ] 
+If all interrupts in one cycle are sensors testing  ,  ATP shall set SensorTestPerformed .  Otherwise  ,  set SensorTestPerformed as False . 
+ [ iTC_CC_ATP-SwRS- 0  4  6  4  ] 
+SensorSequenceDetected_ 1   , SensorSequenceDetected_ 2   , SensorSequenceDetected_ 3   , 
+If sensors testing performed in this cycle  ,  ATP shall determine the conduction state of each sensor :
+If all test results of every interrupts for this sensor are SENSOR_CONDUCT  ,  ATP shall set sensor sequence detected for this sensor ; 
+Otherwise  ,  does not set this sensor sequence detected . 
+If sensors testing do not perform  ,  ATP does not set any sensor sequence detected . 
+ [ iTC_CC_ATP-SwRS- 0  1  6  8  ] 
+ATP shall check consistency of sensors whether sensor testing performed or not .  Sensors testing result shall declare inconsistent at cycle k  ( UnconsistentSensorTest )  if the following conditions are fulfilled :
+Sensors test done at cycle k  ,  and no sequence has been detected on any of the three sensors C 1   ,  C 2   ,  C 3   ( SENSOR_BLOCKED ) 
+Or at cycle k  ,  the expected sequence is detected on all three sensors C 1   ,  C 2   ,  C 3   ( SENSOR_CONDUCT )  . 
+Or any of the three sensors is tested as error  ( SENSOR_WRONG )  . 
+ [ iTC_CC_ATP-SwRS- 0  1  7  1  ] 
+Wheel shall consider safely stopped WheelStopped at cycle k if the following conditions are fulfilled :
+sensors test has been performed  , 
+and at least one sensor out of three sensors C 1   ,  C 2   ,  C 3  has detected expected sequence  , 
+and at least one sensor out of three sensors C 1   ,  C 2   ,  C 3  has not detected expected sequence  , 
+and sensors test result combination on three sensors C 1   ,  C 2   ,  C 3  has not changed between cycle k- 1  and k . 
+ [ iTC_CC_ATP-SwRS- 0  1  7  2  ] 
+At cycle k  ,  WheelFilteredStopped shall change from False to True on raising edge of WheelStopped information  ,  That is  ,  if :
+WheelStopped information was False at cycle k- 1   , 
+and WheelStopped information was True at cycle k . 
+and then :
+LastStopCogPosition is assigned to TeethCounter  , 
+At cycle k  ,  WheelFilteredStopped shall change from True to False  ,  according following expression :
+the cog moved more than one cog ; 
+ [ iTC_CC_ATP-SwRS- 0  1  7  3  ] 
+MaxCountCogsRunInCycleExceeded
+ATP shall detect whether the cog number counted in adjacent interrupt is greater than the default maximum cog number on cycle or on interrupt . 
+ [ iTC_CC_ATP-SwRS- 0  1  7  4  ] 
+WheelKinematicsInvalidForCogCount
+If the calculated movement exceeds the default one  ,  ATP shall set the wheel kinematics invalid . 
+ 5  .  1  1  .  4  . 	Outputs
+ 5  .  1  2  . 	F 2  3 -Manage the Odometer State
+ 5  .  1  2  .  1  . 	Inputs
+ 5  .  1  2  .  2  . 	Locals
+ 5  .  1  2  .  3  . 	Processing
+In the main task of each cycle  ,  ATP need to estimate the odometer state and calculate WheelMaximumMovement和WheelMinimumMovement  ,  based on the sensor test results and the matching status between cog count and cog number of odometer .  As shown in Figure  5  7  there are several odometer state : 
+NOT_INITIALIZED  ,  just after ATP powered up  ,  the odometer is not initialized .  At this moment  ,  ATP should overvalue the wheel displacement to ensure the safety only when the sensor detected that the wheel is completely static . 
+WAITING_COG_POSITION_CODE_READY  ,  the odometer starts rolling and continues to roll eight cogs .  During this process  ,  ATP should over-estimate wheel displacement to ensure the safety .  
+INITIALIZED  ,  when odometer has initialized  ,  it enters into the normal working status .  If ATP detected the cog count and cog number is matching or the wheel is static  ,  it can calculate the wheel displacement by using the odometer value  ,  otherwise  ,  it should over- estimate the displacement . 
+INVALID  ,  the odometer is in the invalid status . 
+ 5  .  1  2  .  3  .  1  . 	State  " NOT_INITIALIZED " 
+ [ iTC_CC_ATP-SwRS- 0  1  7  5  ] 
+From power-up  ,  ATP shall consider that OdometerState is  " NOT_INITIALIZED "  . 
+ [ iTC_CC_ATP-SwRS- 0  1  7  6  ] 
+If OdometerState is NOT_INITIALIZED at cycle k  ,  and if wheel detected stopped at cycle k  ,  then WheelMinimumMovement and WheelMaximumMovement shall be set to zero . 
+ [ iTC_CC_ATP-SwRS- 0  1  7  7  ] 
+At cycle k  ,  ATP shall consider that OdometerState changes from NOT_INITIALIZED to WAITING_COG_POSITION_CODE_READY if :
+a falling edge is detected on WheelFilteredStopped information  , 
+and sensors test is consistent at cycle k and was consistent at cycle k- 1   , 
+ [ iTC_CC_ATP-SwRS- 0  1  7  8  ] 
+At cycle k  ,  ATP shall consider that OdometerState changes from NOT_INITIALIZED to INVALID
+if sensors test is not consistent at cycle k . 
+ 5  .  1  2  .  3  .  2  . 	State  " WAITING_COG_POSITION_CODE_READY " 
+ [ iTC_CC_ATP-SwRS- 0  1  7  9  ] 
+InitializationTimer
+ATP shall accumulate the time for waiting cog position ready state . 
+ [ iTC_CC_ATP-SwRS- 0  1  8  0  ] 
+At cycle k  ,  ATP shall consider that OdometerState changes from WAITING_COG_POSITION_CODE_READY to NOT_INITIALIZED if :
+wheel is detected stopped  ( WheelFilteredStopped )   , 
+and cog position remains unknown  ( not OdometerCogPositionReady )   , 
+and there is no sensors test inconsistency  , 
+and time elapsed since last time OdometerState was NOT_INITIALIZED  ( InitializationTimer )  is strictly less than ATPsetting . OdoInitTimeout
+ [ iTC_CC_ATP-SwRS- 0  1  8  1  ] 
+At cycle k  ,  ATP shall consider that OdometerState changes from WAITING_COG_POSITION_CODE_READY to INITIALIZED
+If :
+Cog position is safely known which means that wheel angular position is well-known ; 
+and there is no sensors test inconsistency ; 
+and time elapsed since last time OdometerState was NOT_INITIALIZED  ( InitializationTimer )  is strictly less than ATPsetting . OdoInitTimeout . 
+ [ iTC_CC_ATP-SwRS- 0  1  8  2  ] 
+At cycle k  ,  ATP shall consider that OdometerState changes from WAITING_COG_POSITION_CODE_READY to INVALID if :
+sensors test inconsistency is detected  , 
+or time elapsed since last time OdometerState was NOT_INITIALIZED  ( InitializationTimer )  is more than or equal to the ATPsetting . OdoInitTimeout
+ [ iTC_CC_ATP-SwRS- 0  1  8  3  ] 
+When odometer is initializing  ,  wheel movement shall be over and under estimated considering maximum acceleration per cycle according with the train front :
+ 5  .  1  2  .  3  .  3  . 	State  " INITIALIZED " 
+ [ iTC_CC_ATP-SwRS- 0  1  8  6  ] 
+At cycle k  ,  ATP shall consider that OdometerState changes from INITIALIZED to INVALID if :
+OdometerState was evaluated Initialized at cycle k- 1   , 
+And :
+Sensors test result is inconsistent ; 
+Or neither wheel filtered stopped nor cog position ready . 
+NOTES：
+Wheel angular movement is the rotation movement observed on the wheel in cog count from cycle k- 1  to k .  Angular movement of the wheel can convert into a linear movement by taking into consideration of the uncertainty on wheel diameter measurement provided by calibration process .  WheelMinimumMovement and WheelMaximumMovement represents respectively minimum and maximum curvilinear distance ran between cycle k- 1 and k by a reference point of the wheel located on the rolling circumference . 
+ [ iTC_CC_ATP-SwRS- 0  1  8  7  ] 
+If motion and speed are available at cycle k  ,  then wheel curvilinear movement calculates as follows :
+NOTES :
+When odometer cog-counter-code matched  ,  regardless of ATP in END_ 1  or END_ 2   ,  and no matter the activation of train front  ,  the direction towards END_ 1  is always be set as the positive direction .  That is  ,  when the movement is greater than  0   ,  indicating the direction of the train is running to END_ 1   ,  and vice versa to END_ 2  . 
+ 5  .  1  2  .  3  .  4  . 	State  " INVALID " 
+ [ iTC_CC_ATP-SwRS- 0  1  8  9  ] 
+At cycle k  ,  ATP shall consider that OdometerState changes from INVALID to NOT_INITIALIZED if :
+OdometerState was evaluated Invalid at cycle k- 1   , 
+and wheel is detected stopped  ( WheelFilteredStopped )   , 
+and there is no sensors test inconsistency . 
+ [ iTC_CC_ATP-SwRS- 0  5  7  8  ] 
+In invalid status  ,  ATP shall calculate wheel movement by using measured value of the odometer . 
+ 5  .  1  2  .  3  .  5  . 	Wheel kinematic calculation
+ [ iTC_CC_ATP-SwRS- 0  1  7  0  ] 
+ATP shall invalidate wheel kinematic if minimum odometer motion is null and sensors test is not performed for more than ATPsetting . OdoTestContradictionDuration . 
+ [ iTC_CC_ATP-SwRS- 0  1  9  0  ] 
+ValidWheelKinematic
+Wheel kinematic is valid if odometer is valid  ,  the calculated motion is not greater than the default value  ,  and there is communication with odometer . 
+ [ iTC_CC_ATP-SwRS- 0  6  3  6  ] 
+WheelMinSpeed
+ [ iTC_CC_ATP-SwRS- 0  2  0  4  ] 
+WheelMaxSpeed
+ATP calculates the maximum wheel speed according to the maximum wheel movement ;  this value is non-negative and rounded up . 
+ 5  .  1  2  .  4  . 	Outputs
+ 5  .  1  3  . 	F 2  4 -Compensate Sliding Slipping Effect
+ 5  .  1  3  .  1  . 	Inputs
+ 5  .  1  3  .  2  . 	Locals
+ 5  .  1  3  .  3  . 	Processing
+As the coded odometer installed on the train brake axle  ,  there is maybe sliding phenomenon between rail and wheel when the train braking .  So it will lead to the situation that the detected wheel movement is less than the actual train movement  ( i . e .  the rolling speed of wheel is slower than the actual train speed )  .  In order to avoid this situation  ,  according to the variables of acceleration tested by odometer  ,  ATP will over-estimate the movement and get the over-estimated actual train movement to estimate the train speed for safety consideration . 
+ [ iTC_CC_ATP-SwRS- 0  2  0  1  ] 
+InstantaneousWheelAcceleration
+When wheel motion and acceleration are measurable  ,  then instantaneous acceleration computed according following expression :
+ [ iTC_CC_ATP-SwRS- 0  2  0  2  ] 
+FilteredWheelAcceleration measurement is the average of InstantaneousWheelAcceleration over FILTERED_ACCELERATION_NB cycles for filtering the fluctuation causing by the sampling period . 
+ [ iTC_CC_ATP-SwRS- 0  2  0  3  ] 
+AverageWheelAcceleration
+When wheel motion and acceleration are measurable  ,  sliding average acceleration at cycle k defined by following expression :
+ 5  .  1  3  .  3  .  1  . 	Sliding state management
+ [ iTC_CC_ATP-SwRS- 0  2  0  5  ] 
+StartBrakingMovementMax
+ATP records the maximum movement when the state transferring from COASTING to BRAKING or SLIDING  ,  or from BRAKING to SLIDING . 
+ [ iTC_CC_ATP-SwRS- 0  2  2  6  ] 
+MaxMotionDuringBrakingOrSliding
+ATP shall record the reversed motions during the braking or sliding state . 
+ [ iTC_CC_ATP-SwRS- 0  2  2  7  ] 
+MaxMotionOdometerSignChanged
+If the reversed motion during braking or sliding state is greater than a project defined distance  ,  ATP shall consider the motion sign changed . 
+ [ iTC_CC_ATP-SwRS- 0  2  0  6  ] 
+StartSlidingSpeed
+ATP shall record the speed when the train begins to slide . 
+ [ iTC_CC_ATP-SwRS- 0  2  0  7  ] 
+TimeInSliding
+ATP shall record how many cycles staying in SLIDING state . 
+ [ iTC_CC_ATP-SwRS- 0  2  0  0  ] 
+ATP software shall use the over-estimation model for train movement provided by Figure  5  8  state-diagram .  The maximum and minimum train motion shall overestimate based on different state as follows :
+COASTING .  There is not sliding effect during on train coasting or motoring  ,  so ATP need not to overestimate train motion . 
+BRAKING .  When train brakes  ,  which means the measured acceleration is less than the ATPsetting . BrakingStartAcc  ( normally - 0  .  3 m / s^ 2  )   ,  ATP shall overestimated the maximum train motion  1  5 % at most . 
+SLIDING  ,  When the measured acceleration is less than the ATPsetting . SlidingStartAcc  ( - 2  .  5 m / s^ 2  normally )  or the average acceleration is less than ATPsetting . BrakingStartAcc  ,  ATP shall use the train motion before SLIDING as the current train motion . 
+SKIDDING  ,  If train slides or slips excessively  ,  ATP shall consider odometer motion untrustworthy . 
+ [ iTC_CC_ATP-SwRS- 0  2  0  9  ] 
+The state transfers from  " COASTING "  to  " BRAKING "  when : 
+ [ iTC_CC_ATP-SwRS- 0  2  1  0  ] 
+The MotionOverEstimationState transfers from  " COASTING "  to  " SLIDING "  when : 
+ [ iTC_CC_ATP-SwRS- 0  2  1  3  ] 
+The MotionOverEstimationState transfers from  " BRAKING "  to  " SLIDING "  when : 
+ [ iTC_CC_ATP-SwRS- 0  2  1  4  ] 
+The MotionOverEstimationState transfers from  " BRAKING "  to  " COASTING "  when : 
+ [ iTC_CC_ATP-SwRS- 0  4  5  0  ] 
+The MotionOverEstimationState transfers from  " SLIDING "  to  " COASTING "  when :
+NOTES：
+The principle of overestimation in SLIDING state based on the following assumptions :
+Because the threshold deceleration  ( the typical value is - 2  .  3 m / s^ 2  )  used to detect sliding is far less than the full service braking deceleration  ( normally - 1 m / s^ 2  )   ,  it is not possible to reach the SLIDING state unless the emergency brake applied .  The project guaranteed that the absolute value of the minimum emergency brake deceleration is greater than the acceleration due to track gradient  ,  and the rolling stock must cut off the traction during EB applied .  Therefore  ,  during SLIDING state  ,  the real speed of the train must gradually reduce .  However  ,  if the measured absolute value of the wheel deceleration is too large or too long in the sliding conditions  ,  ATP shall consider the overestimation algorithm as failure . 
+ [ iTC_CC_ATP-SwRS- 0  4  5  1  ] 
+At cycle k  ,  if motion overestimation status is SLIDING  ,  ATP shall consider that sliding effect is ended  ( SlidingEnded )  if FilteredWheelAcceleration is strictly less than ATPsetting . SlippingStopAcc and strictly greater than ATPsetting . SlidingStopAcc for more than ATPsetting . SlidingGripRecoveryTime . 
+ [ iTC_CC_ATP-SwRS- 0  2  1  8  ] 
+The MotionOverEstimationState transfers from  " SLIDING "  to  " BRAKING "  when :
+ [ iTC_CC_ATP-SwRS- 0  4  5  2  ] 
+At cycle k  ,  if motion overestimation status is SLIDING  ,  ATP shall consider that sliding is excess  ( SlidingExcess )  if FilteredWheelAcceleration is strictly less than ATPsetting . SlippingStopAcc and strictly greater than ATPsetting . SlidingStopAcc for more than ATPsetting . SlidingExcessTime . 
+ [ iTC_CC_ATP-SwRS- 0  2  1  7  ] 
+The MotionOverEstimationState transfers from SLIDING to SKIDDING when :
+NOTES：
+Because the application of anti-lock braking system for the train of current project  ,  makes the brake acceleration cannot continuous less than ATPsetting . SlidingStopAcc for serious cycles .  Therefore  ,  if there was an unexpected instantaneous acceleration less than ATPsetting . SlidingStopAcc  ,  and the after cycles' acceleration met the criteria of SlidingExcess  ,  then the following two conditions can hold simultaneously . 
+ [ iTC_CC_ATP-SwRS- 0  2  2  0  ] 
+The MotionOverEstimationState transfers from SKIDDING to COASTING when : 
+ [ iTC_CC_ATP-SwRS- 0  7  3  5  ] 
+StartBrakingMovementMin
+ATP records the minimum movement when the state transferring from COASTING to BRAKING or SLIDING  ,  or from BRAKING to SLIDING . 
+ [ iTC_CC_ATP-SwRS- 0  7  8  7  ] 
+OverestimatedMotionMin
+ [ iTC_CC_ATP-SwRS- 0  7  8  8  ] 
+OverestimatedMotionMax
+In BRAKING state  ,  the maximum train motion overestimated as ATPsetting . SlidingCoefficient  (  1  5 % normally )  at most .  If the overestimated motion has greater than the start braking movement  ,  ATP shall use the start breaking movement as the current train motion .  That said the train speed during braking could not faster than before . 
+In state SLIDING :
+If both WheelMaximumMovement and StartBrakingMovementMax are same direction  ,  and the absolute value of the former is greater than the absolute value of the latter  ,  indicating that due to the sampling error makes the measured movement greater than StartBrakingMovementMax .  In this case  ,  ATP shall uses WheelMaximumMovement as current train maximum motion . 
+Otherwise  ,  uses StartBrakingMovementMax as train maximum motion . 
+In other state  ( COASTING  ,  SKIDDING )   ,  uses measured wheel maximum movement as current overestimated maximum train motion . 
+ 5  .  1  3  .  3  .  2  . 	Slipping state management
+ [ iTC_CC_ATP-SwRS- 0  7  6  9  ] 
+StartSlippingSpeed
+ATP shall record the speed when the train begins to slip . 
+ [ iTC_CC_ATP-SwRS- 0  7  7  0  ] 
+TimeInSlipping
+ATP shall record how many cycles staying in SLIPPING state . 
+ [ iTC_CC_ATP-SwRS- 0  7  9  3  ] 
+OdometerAxleMotorized
+If the project that odometer installed on the traction axle of the train  ,  ATP shall consider the slipping effect to impact the underestimation of measured wheel movement . 
+ [ iTC_CC_ATP-SwRS- 0  1  9  9  ] 
+ATP software shall use the over-estimation model for train movement provided by Figure  5  9  state-diagram .  The maximum and minimum train motion shall overestimate based on different state as follows :
+COASTING .  There is not sliding effect during on train coasting or motoring  ,  so ATP need not to overestimate train motion . 
+MOTORING  ,  normal traction state  ( only consdering odometer installed on motorized axle )  . 
+SLIPPING  ,  wheel slipping happen  ( only consdering odometer installed on motorized axle )  . 
+SKIDDING  ,  If train slides or slips excessively  ,  ATP shall consider odometer motion untrustworthy . 
+ [ iTC_CC_ATP-SwRS- 0  7  7  1  ] 
+The MotionUnderEstimationState transfers from  " COASTING "  to  " MOTORING "  when : 
+ [ iTC_CC_ATP-SwRS- 0  7  7  2  ] 
+The MotionUnderEstimationState transfers from  " COASTING "  to  " SLIPPING "  when : 
+ [ iTC_CC_ATP-SwRS- 0  7  7  3  ] 
+The MotionUnderEstimationState transfers from  " MOTORING "  to  " SLIPPING "  when : 
+ [ iTC_CC_ATP-SwRS- 0  7  7  4  ] 
+The MotionUnderEstimationState transfers from MOTORING to COASTING "  when : 
+ [ iTC_CC_ATP-SwRS- 0  7  7  5  ] 
+The MotionUnderEstimationState transfers from SLIPPING to COASTING when :
+ [ iTC_CC_ATP-SwRS- 0  7  7  6  ] 
+SlippingEnded
+ [ iTC_CC_ATP-SwRS- 0  7  7  7  ] 
+The MotionUnderEstimationState transfers from SLIPPING to MOTORING when :
+ [ iTC_CC_ATP-SwRS- 0  7  7  8  ] 
+SlippingExcess
+ [ iTC_CC_ATP-SwRS- 0  7  7  9  ] 
+The MotionUnderEstimationState transfers from SLIPPING to SKIDDING when :
+ [ iTC_CC_ATP-SwRS- 0  7  9  4  ] 
+The MotionUnderEstimationState transfers from SKIDDING to COASTING when : 
+ [ iTC_CC_ATP-SwRS- 0  7  8  0  ] 
+StartMotoringMovementMin
+ATP records the minimum movement when the state transferring from COASTING to MOTORING or SLIPPING  ,  or from MOTORING to SLIPPING . 
+ [ iTC_CC_ATP-SwRS- 0  7  9  5  ] 
+UnderestimatedMotionMin
+ [ iTC_CC_ATP-SwRS- 0  7  9  6  ] 
+UnderestimatedMotionMax
+ 5  .  1  3  .  3  .  3  . 	Slide slip modelling validity
+ [ iTC_CC_ATP-SwRS- 0  1  9  1  ] 
+SlipSlideDetected
+For calibration validation purpose  ,  ATP shall consider that slip / side detected if :
+motion overestimation modeling status is not coasting nor braking  , 
+or motion underestimation modeling status is not coasting nor motoring . 
+ [ iTC_CC_ATP-SwRS- 0  2  2  8  ] 
+SlipSlideModellingFault
+When the overestimation or underesimation state is SKIDDING  ,  or the motion signed changed in BRAKING or SLIDING state  ,  ATP shall consider the overestimation model as fault . 
+ [ iTC_CC_ATP-SwRS- 0  2  2  9  ] 
+ValidSlipSlideModelling
+If overestimation model was fault  ,  then ATP considers the model invalid .  
+ [ iTC_CC_ATP-SwRS- 0  7  9  7  ] 
+MaximumSScompensatedMotion
+ [ iTC_CC_ATP-SwRS- 0  7  9  8  ] 
+MinimumSScompensatedMotion
+ 5  .  1  3  .  4  . 	Outputs
+ 5  .  1  4  . 	F 2  5 -Calculate Radar Speed
+ 5  .  1  4  .  1  . 	Inputs
+ 5  .  1  4  .  2  . 	Locals
+ 5  .  1  4  .  3  . 	Processing
+ [ iTC_CC_ATP-SwRS- 0  7  8  1  ] 
+RadarInfo
+ [ iTC_CC_ATP-SwRS- 0  7  8  2  ] 
+RadarRawSpeed
+ [ iTC_CC_ATP-SwRS- 0  7  8  3  ] 
+RadarDirection
+ [ iTC_CC_ATP-SwRS- 0  7  8  4  ] 
+RadarMotionMax
+ [ iTC_CC_ATP-SwRS- 0  7  8  5  ] 
+RadarMotionMin
+ [ iTC_CC_ATP-SwRS- 0  7  8  6  ] 
+RadarSpeedValid
+ 5  .  1  4  .  4  . 	Outputs
+ 5  .  1  5  . 	F 2  6 -Detect Odometer Axle Lock
+ 5  .  1  5  .  1  . 	Inputs
+ 5  .  1  5  .  2  . 	Locals
+ 5  .  1  5  .  3  . 	Processing
+As ATP calculate the movement and speed only based on the axle odometer assembled  ,  it is necessary to avoid the situation that this axle is locked during the train braking  ,  which may cause the danger that ATP judge the train status as stillness by mistake .  Therefore  ,  ATP need to adopt two independent sources of reference speed i . e .  when the ATP detected the train is still through the odometer  ,  while the referenced speed showed that the train is running  ,  ATP can conclude that the wheel with odometer is blocked .  The OdometerRef_ 1  and OdometerRef_ 2  are coming from the speed measuring system of the train and the odometer of the remote ATP respectively .  The reference speed structure shows as below :
+ 5  .  1  5  .  3  .  1  . 	Odometer speed availability
+ [ iTC_CC_ATP-SwRS- 0  6  3  7  ] 
+OdometerSpeedAvailable
+ [ iTC_CC_ATP-SwRS- 0  2  3  0  ] 
+OdometerSpeedUnderThreshold
+ATP shall detect whether the measured wheel speed is under threshold . 
+ [ iTC_CC_ATP-SwRS- 0  1  2  8  ] 
+ReferenceSpeedUnderThreshold_ 1  defines whether the referenced speed  1  from CCNV is lower than a configurable threshold . 
+ [ iTC_CC_ATP-SwRS- 0  1  2  9  ] 
+ReferenceSpeedAvailable_ 1  defines whether the referenced speed  1  from CCNV is valid or not .  
+ [ iTC_CC_ATP-SwRS- 0  1  3  0  ] 
+ReferenceSpeedUnderThreshold_ 2  defines whether the referenced speed  2  from CCNV is lower than a configurable threshold .  
+ [ iTC_CC_ATP-SwRS- 0  1  3  1  ] 
+ReferenceSpeedAvailable_ 2  shows whether the referenced speed  2  from CCNV is effective or not .  
+ [ iTC_CC_ATP-SwRS- 0  2  3  1  ] 
+OdometerRef_ 1  . PossiblyDisabled
+The independent source of odometry reference  1  said to disable if following conditions reached :
+local source of odometry is available  ( ValidWheelKinematic )   , 
+and OdometerSpeedUnderThreshold indicates that train speed is greater than reference speed threshold  , 
+and source of odometry reference  1  is available  , 
+and odometer reference  1  indicates that train speed is less than reference speed threshold . 
+ [ iTC_CC_ATP-SwRS- 0  2  3  2  ] 
+OdometerRef_ 2  .  PossiblyDisabled
+The independent source of odometry reference  2  said to disable if following conditions reached :
+local source of odometry is available  ( ValidWheelKinematic )   , 
+and OdometerSpeedUnderThreshold indicates that train speed is greater than reference speed threshold  , 
+and source of odometry reference  2  is available  , 
+and odometer reference  2  indicates that train speed is less than reference speed threshold . 
+ [ iTC_CC_ATP-SwRS- 0  2  3  3  ] 
+OdometerRef_ 1  . PossiblyEnabled
+The independent source of odometry reference  1  said to enable if following conditions reached :
+local source of odometry is available  , 
+and OdometerSpeedUnderThreshold indicates that train speed is greater than reference speed threshold  , 
+and source of odometry reference  1  is available  , 
+and odometer reference  1  indicates that train speed is greater than reference speed threshold . 
+ [ iTC_CC_ATP-SwRS- 0  2  3  4  ] 
+OdometerRef_ 2  . PossiblyEnabled
+The independent source of odometry reference  2  said to enable if following conditions reached :
+local source of odometry is available  , 
+and OdometerSpeedUnderThreshold indicates that train speed is greater than reference speed threshold  , 
+and source of odometry reference  2  is available  , 
+and odometer reference  2  indicates that train speed is greater than reference speed threshold . 
+ [ iTC_CC_ATP-SwRS- 0  2  3  5  ] 
+OdometerRef_ 1  . OutOfOrder
+The independent source of odometry reference  1  is said to be out of order if it is possibly disabled during more than ATPsetting . OdoLockedAxleDisablingLatency . 
+When the independent source of odometry reference  1  had out of order  ,  it considered not out of order one if the source of odometry reference  1  is possibly enabled during more than ATPsetting . OdoLockedAxleEnablingLatency :
+ [ iTC_CC_ATP-SwRS- 0  2  3  6  ] 
+OdometerRef_ 2  . OutOfOrder
+The independent source of odometry reference  2  is said to be out of order if it is possibly disabled during more than ATPsetting . OdoLockedAxleDisablingLatency . 
+When the independent source of odometry reference  2  had out of order  ,  It considered not out of order one if the source of odometry reference  2  is possibly enabled during more than ATPsetting . OdoLockedAxleEnablingLatency :
+ [ iTC_CC_ATP-SwRS- 0  2  3  7  ] 
+OdometerRef_ 1  . Contradictory
+The source of odometry reference  1  said to be contradictory with local source of odometry if :
+local source of odometry is available  ( ValidWheelKinematic ) 
+and OdometerSpeedUnderThreshold indicates that wheel speed is less than reference speed threshold  , 
+and source of odometry reference  1  is available and not out of order  , 
+and odometer reference  1  indicates that train speed is greater than reference speed threshold . 
+ [ iTC_CC_ATP-SwRS- 0  2  3  8  ] 
+OdometerRef_ 2  .  Contradictory
+The source of odometry reference  2  said to be contradictory with local source of odometry if :
+local source of odometry is available  ( ValidWheelKinematic ) 
+and OdometerSpeedUnderThreshold indicates that wheel speed is less than reference speed threshold  , 
+and source of odometry reference  2  is available and not out of order  , 
+and odometer reference  2  indicates that train speed is greater than reference speed threshold . 
+ 5  .  1  5  .  3  .  2  . 	Axle locked detection
+ [ iTC_CC_ATP-SwRS- 0  2  3  9  ] 
+AxlePossiblyLocked
+Odometer axle shall consider possibly locked if :
+Both independent sources of odometry indicates a contradiction with local odometer  , 
+Or one source of odometry is contradictory and the other one is out of order  ( or not available )  . 
+ [ iTC_CC_ATP-SwRS- 0  2  4  0  ] 
+If AxlePossiblyLocked situation lasts more than ATPsetting . OdoLockedAxleTimeout  ,  the odometer axle shall be considered locked .  Once UnrecoverableAxleLocked set to True  ,  it will stay at state True unless ATP re-initialized . 
+ [ iTC_CC_ATP-SwRS- 0  2  4  1  ] 
+AxleLockedDetectionAvailable
+If only one or no source of odometry is available  ,  then ATP shall invalidate kinematic while this situation lasting . 
+ [ iTC_CC_ATP-SwRS- 0  2  4  2  ] 
+WheelTrainKinematicCorrelation
+Wheel and train kinematic shall consider correctly correlated if and only if :
+odometer axle is not detected locked  , 
+and odometer axle detection is available
+ 5  .  1  5  .  4  . 	Outputs
+ 5  .  1  6  . 	F 2  7 -Compute Train Kinematics
+ 5  .  1  6  .  1  . 	Inputs
+ 5  .  1  6  .  2  . 	Locals
+ 5  .  1  6  .  3  . 	Processing
+After the overestimation of the sliding effect and consideration of wheel braking decocted by odometers  ,  ATP can calculate the train kinematic parameters which will used by other functions . 
+ [ iTC_CC_ATP-SwRS- 0  2  4  3  ] 
+ValidTrainKinematic
+Train kinematic information shall declare invalid if at least one of following condition is True :
+odometer kinematic is not valid  , 
+or neither radar speed nor over-estimation modeling of train movement is valid  , 
+or train movement and wheel movement has been detected de-correlated . 
+ [ iTC_CC_ATP-SwRS- 0  2  1  2  ] 
+MaximumTrainMotion
+ [ iTC_CC_ATP-SwRS- 0  7  3  6  ] 
+MinimumTrainMotion
+ [ iTC_CC_ATP-SwRS- 0  2  4  4  ] 
+TrainStopped  ,  train shall consider strictly stopped if and only if :
+wheel is detected strictly stopped  , 
+and train kinematic elaboration is valid  , 
+and wheel is not detected sliding . 
+ [ iTC_CC_ATP-SwRS- 0  2  4  5  ] 
+TrainFilteredStopped
+Train shall consider stopped with the tolerance of one cog detection if :
+wheel is detected at filtered stop  , 
+and train kinematic elaboration is valid  , 
+and wheel is not detected sliding . 
+ [ iTC_CC_ATP-SwRS- 0  6  3  8  ] 
+TrainHasMoved
+ [ iTC_CC_ATP-SwRS- 0  6  3  9  ] 
+TrainMinSpeed
+ [ iTC_CC_ATP-SwRS- 0  2  4  6  ] 
+TrainMaxSpeed
+According to the matching of odometer cog counter and code  ,  maximum train speed shall computed using the followings expressions :
+ [ iTC_CC_ATP-SwRS- 0  6  4  0  ] 
+NewBeaconObtained
+ [ iTC_CC_ATP-SwRS- 0  6  4  1  ] 
+BeaconBeforeLastObtained
+ [ iTC_CC_ATP-SwRS- 0  6  4  2  ] 
+BeaconLastObtained
+ [ iTC_CC_ATP-SwRS- 0  2  4  7  ] 
+If a valid beacon with top-loc received between cycle k- 1  and k  ,  then minimum and maximum distance ran since top-loc shall evaluate as the difference between current teeth counter and recorded cog position just before or after top-loc .  If there is no beacon received  ,  ATP updates distances from last beacon using the train movements . 
+ [ iTC_CC_ATP-SwRS- 0  6  3  5  ] 
+End 2 RunningForward
+ [ iTC_CC_ATP-SwRS- 0  7  5  8  ] 
+End 1 RunningForward
+ 5  .  1  6  .  4  . 	Outputs
+ 5  .  1  7  . 	F 2  8 -Calibrate Wheel Movement
+The coding odometer  ,  assembled on axle  ,  has  1  0  0  cogs evenly distributed in the outer ring .  According to the cog impulse detected by sensor from coded odometer  ,  ATP will estimate the train movement .  Therefore  ,  ATP needs to calibrate the cog length by the adjacent MTIB and a verification RB on the track . 
+ 5  .  1  7  .  1  . 	Inputs
+ 5  .  1  7  .  2  . 	Locals
+ 5  .  1  7  .  3  . 	Processing
+There are  1  0  0  cogs evenly distributed in the outer ring of odometer  ,  and each cog’s length represented the  1  /  1  0  0  of wheel perimeter  ,  so we can calculate the cog’s length by the wheel diameter .  Theoretically  ,  the biggest and the smallest wheel diameter is corresponded to the cog length .  When ATP is powered up  ,  it will calculate the train displacement according to the theoretical cog length .  When the train passed the fixed distance  ( this distance described in the track map )   ,  ATP will calibrate the real cog length according to the beacon of this fixed distance  ,  and verify this calibration through the third beacon .  If the calculation is correct  ,  ATP will use this cog length for the kinematic calculation . 
+ [ iTC_CC_ATP-SwRS- 0  1  9  2  ] 
+As shown in Figure  5  1  0   ,  the odometer calibration state divides into the following four states :
+CALI_WAITING  ,  the state of not calibrated or calibration has failed  ,  waiting for read the MTIB 1  beacon . 
+CALI_MEASURING  ,  after read MTIB 1  and waiting for read MTIB 2  . 
+CALI_VALIDATING  ,  after read MTIB 2  and waiting for the verifying RB . 
+CALI_COMPLETED  ,  calibration has been verified by the RB successfully . 
+The following variables shall update during calibration :
+MaxCogCalibration  ,  the overestimated calibration for each cog ; 
+MinCogCalibration  ,  the underestimated calibration for each cog ; 
+CalibrationState  ,  the state of calibration . 
+ 5  .  1  7  .  3  .  1  . 	State  " CALI_WAITING " 
+ [ iTC_CC_ATP-SwRS- 0  1  9  3  ] 
+From power-up and while calibration process is not successfully performed  ,  ATP shall use default calibration to compute train motion and shall consider itself in the state of waiting for the first beacon belonging to a couple of calibration . 
+ [ iTC_CC_ATP-SwRS- 0  4  6  3  ] 
+If ATP is in the state of CALI_WAITING  ,  can transform to the measuring state if following conditions fulfilled :
+a valid beacon has been received and this beacon belongs to a couple of calibration  , 
+and train kinematic was valid  , 
+and no excessive slip / slide effect was detected  , 
+and WheelMinimumMovement is not null  , 
+Then  ,  ATP shall memorize :
+position of the wheel before and after top location signal of received beacon
+the ID of received beacon  , 
+the sign of the movement when crossing beacon  , 
+and shall consider itself as CALI_MEASURING . 
+ 5  .  1  7  .  3  .  2  . 	State  " CALI_MEASURING " 
+ [ iTC_CC_ATP-SwRS- 0  1  9  4  ] 
+If ATP is in the state of CALI_MEASURING and following conditions fulfilled :
+a valid beacon has been received and the beacon and first memorized calibration beacon is one of possible dedicated couple of calibration  , 
+and train kinematic was valid  , 
+and no excessive slip / slide effect was detected  , 
+and sign of train motion is still identical to thus detected on first beacon signaling  , 
+Then  , 
+if resulting calibration range is included in default calibration range  ,  then ATP shall :
+memorize :
+position of the wheel before and after top location signal of received beacon  , 
+the id of received beacon  , 
+and shall consider itself as CALI_VALIDATING . 
+else : ATP shall consider that calibration process has failed and back to CALI_WAITING . 
+Among them  ,  the measured maximum and minimum calibration fetches from the offline-generated counter-calibration table  ,  based on the calculated cog counter . 
+ [ iTC_CC_ATP-SwRS- 0  1  9  5  ] 
+If ATP is in the state of CALI_MEASURING and following conditions fulfilled :
+train kinematic has been detected not valid  , 
+or excessive slip / slide effect has been detected  , 
+or WheelMinimumMovement sign is in the opposite direction of thus observed on first beacon or becomes null  , 
+or an unexpected beacon has been received .  That is  ,  a beacon not belonging calibration measurement couple . 
+Then  ,  ATP shall abort calibration process and back to CALI_WAITING . 
+ 5  .  1  7  .  3  .  3  . 	State  " CALI_VALIDATING " 
+ [ iTC_CC_ATP-SwRS- 0  1  9  6  ] 
+If ATP is in the state of calibration validation in progress and following conditions fulfilled :
+train kinematic has been detected not valid  , 
+or excessive slip / slide effect has been detected  , 
+or WheelMinimumMovement sign is in the opposite direction of thus observed on first beacon or becomes null  , 
+or an unexpected beacon has been received .  That is  ,  a beacon not belonging calibration validation couple . 
+In such case  ,  then ATP shall consider that calibration process as not sable and so back to CALI_WAITING . 
+ [ iTC_CC_ATP-SwRS- 0  1  9  7  ] 
+If ATP is in the state of calibration validation in progress and following conditions fulfilled :
+a valid beacon has been received and this beacon is one of possible confirmation beacons related to second beacon signaled of calibration measurement  , 
+and train kinematic was valid  , 
+and no excessive slip / slide effect was detected  , 
+and sign of train motion is still identical to thus detected on first beacon signaling  , 
+and WheelMinimumMovement is not null . 
+Then  , 
+if resulting calibration range fully includes the calibration range in track map  ,  then ATP shall :
+update ATP minimum and maximum calibration with last calibration computed on beacons  , 
+and shall consider that calibration process is CALI_COMPLETED . 
+else : ATP shall consider that calibration process is not usable and so back to CALI_WATING waiting for new measurement calibration beacons . 
+ 5  .  1  7  .  3  .  4  . 	State  " CALI_COMPLETED " 
+ [ iTC_CC_ATP-SwRS- 0  1  9  8  ] 
+If the calibration completed  ,  ATP shall not calibrate when new calibrating beacons read . 
+ 5  .  1  7  .  4  . 	Outputs
+ 5  .  1  8  . 	F 3 -Locate the Train on Track Map
+ 5  .  1  9  . 	F 3  1 -Initialize Train Location
+ 5  .  1  9  .  1  . 	Inputs
+ 5  .  1  9  .  2  . 	Locals
+ 5  .  1  9  .  3  . 	Processing
+ 5  .  1  9  .  3  .  1  . 	Localization by beacons
+ [ iTC_CC_ATP-SwRS- 0  4  6  1  ] 
+End 2 OrientationByBeacon
+The orientation of the train END means the UP or DOWN orientation which this END toward to .  When a pair of consecutive beacon read  ,  ATP can determine the orientation for each train END according to the direction of these beacons in track map and the direction of train movement . 
+NOTES：
+On a balloon loop  ,  a train can run to the reverse direction without having to shunt or even stop  ,  refer to Figure  5  1  3   , which means there are inconsistent orientations for two train ENDs  ( both END_ 1  and END_ 2  are toward to UP or DOWN )  . 
+ [ iTC_CC_ATP-SwRS- 0  2  4  8  ] 
+BeaconLocation
+If a valid beacon read  ,  ATP shall calculate actual maximum and minimum location of the END_ 2  according to the beacon location in track map  ,  the distance from beacon antenna to the END_ 2   ,  the distance after top-loc  ,  the orientation of END_ 2  and the direction of train movement .  The beacon location indicate the actual external location of the END_ 2  . 
+ [ iTC_CC_ATP-SwRS- 0  2  8  0  ] 
+TrainLocatedOnBeacon
+ 5  .  1  9  .  3  .  2  . 	Localization by memorized location
+ [ iTC_CC_ATP-SwRS- 0  5  9  7  ] 
+MemorizedLocationAuthorized
+ [ iTC_CC_ATP-SwRS- 0  6  4  3  ] 
+MemorizedLocationEnable
+ [ iTC_CC_ATP-SwRS- 0  6  4  4  ] 
+MemorizedLocationAvailable
+ [ iTC_CC_ATP-SwRS- 0  6  4  5  ] 
+MotionSinceMemorizedLocation
+ [ iTC_CC_ATP-SwRS- 0  6  4  6  ] 
+TrainPresumablyLocalized
+ 5  .  1  9  .  3  .  3  . 	Localization by distant ATP location
+ [ iTC_CC_ATP-SwRS- 0  6  4  7  ] 
+TrainStoppedStartTime
+ [ iTC_CC_ATP-SwRS- 0  6  4  8  ] 
+TrainLocatedOnOtherATP
+ 5  .  1  9  .  3  .  4  . 	Initialize train location
+ [ iTC_CC_ATP-SwRS- 0  6  4  9  ] 
+TrainInitialLocation
+ATP determine the initial train location by redundant ATP  ,  memorized location and beacon location in order .  If train delocalized  ,  the train location should be clear . 
+ 5  .  1  9  .  4  . 	Outputs
+ 5  .  2  0  . 	F 3  2 -Update Train Location
+ 5  .  2  0  .  1  . 	Inputs
+ 5  .  2  0  .  2  . 	Locals
+ 5  .  2  0  .  3  . 	Processing
+ 5  .  2  0  .  3  .  1  . 	Location calculating by movement
+ [ iTC_CC_ATP-SwRS- 0  2  5  9  ] 
+LocationBeforeReloc
+If train has localized on the track map  ,  according to the orientation of END_ 2   ,  ATP using the maximum and minimum train motion to update the external or internal location of the END_ 2  . 
+ 5  .  2  0  .  3  .  2  . 	Delocalization detecting
+ [ iTC_CC_ATP-SwRS- 0  2  5  4  ] 
+LocationUntravelable
+ATP shall determine whether there is an unknown-status point intersecting with the train location . 
+If the train has localized at the previous cycle  ,  and fulfills one of the following conditions :
+There is an unknown-status divergence of convergence located in the range from train tail to train head  ,  then ATP shall set as True ; 
+Or else :  ,  if there is a convergence with reverse route located in the range from train tail to train head  ,  the ATP shall set as True ; 
+Or else  ,  train crossed the boundary of ATC area  ,  shall set as True . 
+Otherwise  ,  set as False . 
+ [ iTC_CC_ATP-SwRS- 0  4  6  0  ] 
+InverseLocation
+ [ iTC_CC_ATP-SwRS- 0  2  5  3  ] 
+LocationUncertaintyExceed
+ATP shall calculate the uncertain distance between the external and internal locations of train END_ 2  . 
+ [ iTC_CC_ATP-SwRS- 0  6  5  0  ] 
+TrainRealignmentOnBeacon
+ [ iTC_CC_ATP-SwRS- 0  7  6  8  ] 
+RealignmentFailed
+ [ iTC_CC_ATP-SwRS- 0  7  4  5  ] 
+LocationAfterReloc
+ [ iTC_CC_ATP-SwRS- 0  2  5  0  ] 
+LocPermanentFailure
+ [ iTC_CC_ATP-SwRS- 0  6  5  1  ] 
+MotionSinceLastReloc
+ [ iTC_CC_ATP-SwRS- 0  6  5  2  ] 
+CBTCwithoutKnownPath
+ [ iTC_CC_ATP-SwRS- 0  0  7  4  ] 
+If either of ends can ensure the train integrity  ,  ATP shall set TrainUnitIntegrity as True .  If the project is not configured with the capture of train integrity  ,  it is sure that the train can guarantees the integrity . 
+ [ iTC_CC_ATP-SwRS- 0  2  7  8  ] 
+LocalizationFault
+If the localization state is not NOT_LOCALIZED  ,  ATP shall determine whether the localization fault happens or not  ,  according to the following pseudo-codes :
+ 5  .  2  0  .  3  .  3  . 	Train location calculating
+ [ iTC_CC_ATP-SwRS- 0  2  8  3  ] 
+TrainLocalized
+Only the localization state is LOCALIZED  ,  ATP shall consider the train has localized . 
+When the train passed the continuous two beacons  ,  ATP can judge the initial location and direction according to the position and the sequences of above-mentioned beacons in track map .  Later  ,  ATP can update the train location in the track map in each cycle based on the train movement combined with sliding overestimation and wheel block consideration .  If ATP received a new beacon  ,  it will realign the train location according to this beacon .  For safety  ,  ATP needs to maintain the location information from the external and internal side of each train 
+end . 
+ [ iTC_CC_ATP-SwRS- 0  2  5  8  ] 
+TrainLocation
+ 5  .  2  0  .  4  . 	Outputs
+ 5  .  2  1  . 	F 3  3 -Confirm Train Localization
+ 5  .  2  1  .  1  . 	Inputs
+ 5  .  2  1  .  2  . 	Locals
+ 5  .  2  1  .  3  . 	Processing
+ 5  .  2  1  .  3  .  1  . 	Determine the train front
+ATP shall determine the train front by cab activation from project configured VIOM input port .  If the driver did not activate either end of the cab  ,  ATP shall judge the train front according to the info from CCNV . 
+ [ iTC_CC_ATP-SwRS- 0  0  7  6  ] 
+ATP shall consider the driver is in this cab if it captures that either end of cab activated  ,  which shown by the data from DriverInCab_ 1  or DriverInCab_ 2  . 
+ [ iTC_CC_ATP-SwRS- 0  1  3  9  ] 
+DriverInTrain
+If the active status is different between two ENDs of the train  ,  ATP consider there is a driver in train . 
+ [ iTC_CC_ATP-SwRS- 0  1  2  7  ] 
+NonVitalSelectedFrontEnd represents the train front choice from CCNV .  
+ [ iTC_CC_ATP-SwRS- 0  1  3  8  ] 
+TrainFrontEnd
+If there is a driver in the train  ,  the train front is the activated END .  or else : the front determined by CCNV . 
+Otherwise  ,  the train front is the default one or the front one when train is moving . 
+ [ iTC_CC_ATP-SwRS- 0  2  8  1  ] 
+TrainFrontOrientation
+The train front orientation is the orientation of the active train END . 
+ [ iTC_CC_ATP-SwRS- 0  2  4  9  ] 
+TrainFrontLocation
+ATP updates the train front location according to the active train END . 
+ [ iTC_CC_ATP-SwRS- 0  2  5  5  ] 
+TrainRearLocation
+ATP updates the train rear locations according to the active train END . 
+ 5  .  2  1  .  3  .  2  . 	Location path known status
+ [ iTC_CC_ATP-SwRS- 0  7  5  7  ] 
+LocationPathKnown
+In BM mode  ,  if train localized but EOA is invalid  ,  LocationPathKnown cannot be TRUE when train cross switch .  After train crossed switch and relocalized by beacon successfully  ,  LocationPathKnown can be set to TRUE . 
+ [ iTC_CC_ATP-SwRS- 0  6  5  3  ] 
+TrainLocatedOnKnownPath  , LocationPathKnown . 
+ [ iTC_CC_ATP-SwRS- 0  2  7  5  ] 
+LocalizationState
+ 5  .  2  1  .  3  .  3  . 	Location confirmation for ZC
+ [ iTC_CC_ATP-SwRS- 0  6  5  4  ] 
+MemLocationNotConfirmed
+ [ iTC_CC_ATP-SwRS- 0  6  5  5  ] 
+LocationUncertaintyExceedTime
+ [ iTC_CC_ATP-SwRS- 0  6  5  6  ] 
+LocationNotUncertaintyExceed
+ [ iTC_CC_ATP-SwRS- 0  4  1  1  ] 
+LocalizedAuthorizationForSweepping
+ATP shall send the current localization status to the ZC . 
+ [ iTC_CC_ATP-SwRS- 0  4  1  2  ] 
+TrainConfirmedLocalized
+ATP shall send the status of the localization status whether confirmed . 
+ 5  .  2  1  .  3  .  4  . 	Memorizing train location
+ [ iTC_CC_ATP-SwRS- 0  6  5  7  ] 
+TrainIncludedInSleepingZone
+ [ iTC_CC_ATP-SwRS- 0  6  5  9  ] 
+WritingMemLocRequest
+Only when train has moved and filtered stopped in sleeping zone  ,  can ATP writing memorized location information . 
+ [ iTC_CC_ATP-SwRS- 0  6  6  0  ] 
+ClearingMemLocRequest
+When train has moved and does not fulfill the condition of writing memory location  ,  ATP shall clear memorized location information . 
+ [ iTC_CC_ATP-SwRS- 0  6  6  1  ] 
+MemLocWritten
+ 5  .  2  1  .  4  . 	Outputs
+ 5  .  2  2  . 	F 4 -Monitor Train Energy
+ 5  .  2  3  . 	F 4  1 -Determine the EOA
+ 5  .  2  3  .  1  . 	Inputs
+ 5  .  2  3  .  2  . 	Locals
+ 5  .  2  3  .  3  . 	Processing
+In the block model and CBTC model ATP have different processing mode for EOA .  In the CBTC mode  ,  EOA is coming from ZC message .  In block mode  ,  according to the BM variant status  ,  ATP searches the target from downstream of the train front location .  When it gets the first restricted variant or track border  ,  ATP shall regard it at the EOA for this cycle  ,  and the validity of EOA shall be the same as the BM variants . 
+ 5  .  2  3  .  3  .  1  . 	Determing EOA in block mode
+ [ iTC_CC_ATP-SwRS- 0  2  7  0  ] 
+RestrictiveSignalOverrun  ,  ATP shall determine whether the location of maximum train head overruns a restricted signal in BLOCK mode . 
+When all of the following conditions fulfilled  ,  ATP considers the train has overrun a restricted signal in this cycle  ,  and set RestrictiveSignalOverrun as True . 
+Train has localized ; 
+And the current type of EOA is BLOCK_MODE_EOA ; 
+And RestrictiveSignalOverrun was False at the last cycle ; 
+And the moving direction in current cycle is toward on the train front end ; 
+And the maximum location of train front end passes the position of the signal in this cycle ; 
+And the status of the signal is restriction or overlap established . 
+Otherwise  ,  ATP set RestrictiveSignalOverrun as False . 
+ [ iTC_CC_ATP-SwRS- 0  6  6  2  ] 
+TrainInBMinitialZone
+ [ iTC_CC_ATP-SwRS- 0  6  6  3  ] 
+TrainEnteredInBMinitialZoneAge
+ [ iTC_CC_ATP-SwRS- 0  6  6  4  ] 
+StopAssuredPointCrossed
+ [ iTC_CC_ATP-SwRS- 0  6  6  5  ] 
+CBIminProductionAgeSinceSSAcrossing
+ [ iTC_CC_ATP-SwRS- 0  6  6  6  ] 
+CBIminProductionAge
+ [ iTC_CC_ATP-SwRS- 0  6  6  7  ] 
+ReceivedVariantsAfterEnteredBMinitialZone
+ [ iTC_CC_ATP-SwRS- 0  5  0  4  ] 
+BlockModeEOAvalid
+ 5  .  2  3  .  3  .  2  . 	Determing EOA in CBTC mode
+ [ iTC_CC_ATP-SwRS- 0  6  6  9  ] 
+TrainInSMIzone
+ [ iTC_CC_ATP-SwRS- 0  1  6  0  ] 
+CBTCmodeEOAvalid
+ [ iTC_CC_ATP-SwRS- 0  6  7  0  ] 
+CBTCmodeEOAlocation
+ 5  .  2  3  .  3  .  3  . 	End of authority for train
+ [ iTC_CC_ATP-SwRS- 0  6  7  1  ] 
+EndOfAuthorityValid
+ 5  .  2  3  .  3  .  4  . 	Traction authorized direction
+ [ iTC_CC_ATP-SwRS- 0  1  4  1  ] 
+TractionAuthorisedSenseEnd 1 
+If current EOA is valid and whose orientation is END_ 1   ,  ATP shall authorize the train can move toward END_ 1  . 
+ [ iTC_CC_ATP-SwRS- 0  1  4  2  ] 
+TractionAuthorisedSenseEnd 2 
+If current EOA is valid and whose orientation is END_ 2   ,  ATP shall authorize the train can move toward END_ 2  . 
+ 5  .  2  3  .  4  . 	Outputs
+ 5  .  2  4  . 	F 4  2 -Manage Coerced Permissive or Restrictive
+ 5  .  2  4  .  1  .   Inputs
+ 5  .  2  4  .  2  .   Locals
+ 5  .  2  4  .  3  .  Processing
+ 5  .  2  4  .  3  .  1   Overlap releasable
+ [ iTC_CC_ATP-SwRS- 0  6  0  0  ] 
+BMoverlapReleasableSendable
+ [ iTC_CC_ATP-SwRS- 0  6  7  3  ] 
+OverlapReleasable
+ [ iTC_CC_ATP-SwRS- 0  6  7  4  ] 
+CrossedOverlapTimerInitialSignal
+ [ iTC_CC_ATP-SwRS- 0  6  7  5  ] 
+OverlapTimer
+ [ iTC_CC_ATP-SwRS- 0  6  7  6  ] 
+OverlapTimerPermissive
+ 5  .  2  4  .  3  .  2   Coerced restrictive
+ [ iTC_CC_ATP-SwRS- 0  6  7  7  ] 
+NotCoercedRestrictive_ 1 
+ [ iTC_CC_ATP-SwRS- 0  6  7  8  ] 
+NotCoercedRestrictive_ 2 
+ [ iTC_CC_ATP-SwRS- 0  6  7  9  ] 
+NotCoercedRestrictive_ 3 
+ [ iTC_CC_ATP-SwRS- 0  6  8  0  ] 
+NotCoercedRestrictive_ 4 
+ [ iTC_CC_ATP-SwRS- 0  6  8  1  ] 
+CoercedRestrictive
+ 5  .  2  4  .  3  .  3   Coerced permissive
+ [ iTC_CC_ATP-SwRS- 0  6  8  2  ] 
+CoercedPermissive_ 1 
+ [ iTC_CC_ATP-SwRS- 0  6  8  3  ] 
+CoercedPermissive_ 2 
+ [ iTC_CC_ATP-SwRS- 0  6  8  4  ] 
+CoercedPermissive_ 3 
+ [ iTC_CC_ATP-SwRS- 0  6  8  5  ] 
+CoercedPermissive_ 4 
+ [ iTC_CC_ATP-SwRS- 0  6  8  6  ] 
+CoercedPermissive
+ 5  .  2  4  .  4  Outputs
+ 5  .  2  5  . 	F 4  3 -Manage Temporary Speed Restriction
+ 5  .  2  5  .  1  .    Inputs
+ 5  .  2  5  .  2  .    Locals
+ 5  .  2  5  .  3  .    Processing
+ 5  .  2  5  .  3  .  1  .   Receiving TSR message
+ [ iTC_CC_ATP-SwRS- 0  6  8  7  ] 
+TSRreportReceived
+ [ iTC_CC_ATP-SwRS- 0  0  9  9  ] 
+TSRreportAvailable
+ [ iTC_CC_ATP-SwRS- 0  6  8  8  ] 
+LastTSRreportAge
+ 5  .  2  5  .  3  .  2  .   Parsing TSR
+ [ iTC_CC_ATP-SwRS- 0  1  0  2  ] 
+ReceivedTSRdatabase
+ATP shall map the TSR message received from LC to structure of block .  It need to judge whether there is corresponding TSR for each BLOCK in the track map .  If yes  ,  ATP shall update the abscissa of the starting and ending points  ,  as well as the restriction speed .  During the process  ,  it need to transfer the abscissa and speed unit of TSR message to the corresponding one used in ATP . 
+NOTES：
+For TSR processing  ,  the iTC system supports only one TSR at one BLOCK at most .  The beginning and the termination point of the TSR can be set any position in this block .  However  ,  it never sustains the situation that there are more than one TSR in one block . 
+ 5  .  2  5  .  4  .   Outputs
+ 5  .  2  6  . 	F 4  4 -Compute Train Energy
+This module calculates the train energy . 
+ 5  .  2  6  .  1  . 	Inputs
+ 5  .  2  6  .  2  . 	Locals
+ 5  .  2  6  .  3  . 	Processing
+Document  [ REF 1  0  ]  describes the principle and implementation of the train energy monitoring .  When the EOA is valid  ,  ATP calculates the maximum energy position  ,  where the traction has cut off and the brake begin to effect  ,  based on the overestimated gradient and train kinematics .  According to the principle of conservation of energy  ,  ATP uses the train maximum energy to compare with the restricted energy of the vital zones train located or the downstream constraint points  ,  to determine whether the current train energy exceeded the environment limits .  If the over energy was detected  ,  ATP shall request emergency braking to ensure that in the worst conditions  ,  the train will not exceed the vital zone's speed limits or will not overrun the downstream EOA . 
+ [ iTC_CC_ATP-SwRS- 0  3  0  9  ] 
+If EOA is valid  ,  ATP shall calculate the distance and the speed of the train moved after traction cutoff period  (   )   ,  according to the current train maximum speed  ,  the maximum acceleration of traction and the maximum acceleration of the gradient . 
+Where  , 
+   , the latency from ATP trigger EB command to the traction cut off . 
+   ,  from ATPsetting  ,  is the maximum acceleration of traction at current speed .  
+   ,  from TrackMap  ,  is the maximum acceleration of the gradient in the block start point train front end located plus to the distance  (   ) 
+ [ iTC_CC_ATP-SwRS- 0  3  1  0  ] 
+If EOA is valid  ,  ATP shall calculate the distance and the speed of the train moved after the traction cutoff period plus emergency brake applied period  (   )   ,  according to the current train maximum speed  ,  the maximum acceleration of traction and the maximum acceleration of the gradient . 
+Where  ,     , the ATPsetting . EBtractionToBrakingLatency latency from RS cut off the traction to the emergency braking applied . 
+ [ iTC_CC_ATP-SwRS- 0  3  1  2  ] 
+TrainEnergy   , ATP shall calculate the train energy where EB indeed applied .  The calculation shall consider the kinetic energy and the error of the potential energy .  
+The ATPsetting . MPauthAltitudeMaxErrorEnergy means an algorithm error caused by offline tool to calculate the compensation gradients . 
+ 5  .  2  6  .  4  . 	Outputs
+ 5  .  2  7  . 	F 4  5 -Process Singularities
+For the localized train  ,  ATP shall consider the singularities within the range of train locations from the head END to the tail .  For instance  ,  ATP need to estimate whether the train is in the authorized area for opening the door in station  ,  or whether the train location intersects with the PSD  ,  or whether the train location exceeds the signal with restricted status . 
+ 5  .  2  7  .  1  .    Inputs
+ 5  .  2  7  .  2  .    Locals
+ 5  .  2  7  .  3  .    Processing
+For the vital zone intersected with the train location  ,  such as PSR  ,  TSR  ,  restricted PSD or Protection Zone etc .   ,  ATP shall inhibit the instantaneous velocity of the train will not greater than the limit .  In addition  ,  ATP shall request EB if the train location intersected with the EOA  ,  uncontrolled point or track end . 
+Even in the worst cases  ,  ATP should ensure that the train could stop in the upstream of the constraint point  ,  i . e .  not exceeding EOA .  Meanwhile  ,  if there is PSR or TSR area in the downstream  ,  ATP also should ensure trains enter the area below the speed restriction .  Therefore  ,  ATP needs to calculate kinetic energy and static energy of each potential limitation to ensure that the current train energy is lower than the limitation energy . 
+ 5  .  2  7  .  3  .  1  .   Train speed limit
+ [ iTC_CC_ATP-SwRS- 0  6  9  0  ] 
+ZoneVSLNotExceedTrainSpeedLimit
+ 5  .  2  7  .  3  .  2  .    PSR
+ [ iTC_CC_ATP-SwRS- 0  6  9  1  ] 
+ZoneVSLnotExceedPSR
+ [ iTC_CC_ATP-SwRS- 0  6  9  2  ] 
+PointVSLnotExceedPSR
+NOTES :
+If the train tail intersected with a PSR  ( or TSR )  area  ,  and the speed of train is lower but the V 2 EbApplied is higher than the limitation .  In accordance with the above approach will result in EB  ,  although when the train runs to the EB applied position  ,  the train may have left the PSR area . 
+ 5  .  2  7  .  3  .  3  .    BSR
+ [ iTC_CC_ATP-SwRS- 0  6  9  3  ] 
+ZoneVSLnotExceedBSR
+ [ iTC_CC_ATP-SwRS- 0  6  9  4  ] 
+PointVSLnotExceedBSR
+ 5  .  2  7  .  3  .  4  .    TSR
+ [ iTC_CC_ATP-SwRS- 0  0  6  9  ] 
+According to the status of TSRcontrollinhibition  ,  ATP can judge whether it is necessary to handle TSR information . 
+ [ iTC_CC_ATP-SwRS- 0  6  9  5  ] 
+ZoneVSLnotExceedTSR
+ [ iTC_CC_ATP-SwRS- 0  6  9  6  ] 
+PointVSLnotExceedTSR
+ 5  .  2  7  .  3  .  5  .    Track ends
+ [ iTC_CC_ATP-SwRS- 0  6  9  7  ] 
+ZoneVSLnotExceedOTE
+ [ iTC_CC_ATP-SwRS- 0  6  9  8  ] 
+PointVSLnotExceedOTE
+ [ iTC_CC_ATP-SwRS- 0  6  9  9  ] 
+ZoneVSLnotExceedCTE
+ [ iTC_CC_ATP-SwRS- 0  7  0  0  ] 
+PointVSLnotExceedCTE
+ 5  .  2  7  .  3  .  6  .   Signals and overlap ends
+ [ iTC_CC_ATP-SwRS- 0  7  0  1  ] 
+ZoneVSLnotExceedSignal
+ [ iTC_CC_ATP-SwRS- 0  7  0  2  ] 
+PointVSLnotExceedSignal
+ [ iTC_CC_ATP-SwRS- 0  7  0  3  ] 
+ZoneVSLnotExceedOverlap
+ [ iTC_CC_ATP-SwRS- 0  7  0  4  ] 
+PointVSLnotExceedOverlap
+ 5  .  2  7  .  3  .  7  .    Uncontrolled points
+ [ iTC_CC_ATP-SwRS- 0  7  0  5  ] 
+ZoneVSLnotExceedSwitch
+ [ iTC_CC_ATP-SwRS- 0  7  0  6  ] 
+PointVSLnotExceedSwitch
+ 5  .  2  7  .  3  .  8  .    Protection zones
+ [ iTC_CC_ATP-SwRS- 0  7  0  7  ] 
+ZoneVSLnotExceedPZ
+ [ iTC_CC_ATP-SwRS- 0  7  0  8  ] 
+PointVSLnotExceedPZ
+ 5  .  2  7  .  3  .  9  .   PSD zones
+ [ iTC_CC_ATP-SwRS- 0  7  0  9  ] 
+ZoneVSLnotExceedPSD
+ [ iTC_CC_ATP-SwRS- 0  7  1  0  ] 
+PointVSLnotExceedPSD
+ 5  .  2  7  .  3  .  1  0  .   ZC zones without LC authorization
+ [ iTC_CC_ATP-SwRS- 0  7  1  1  ] 
+ZoneVSLnotExceedZC
+ [ iTC_CC_ATP-SwRS- 0  7  1  2  ] 
+PointVSLnotExceedZC
+ 5  .  2  7  .  3  .  1  1  .   EOA
+ [ iTC_CC_ATP-SwRS- 0  7  1  3  ] 
+ZoneVSLnotExceedEOA
+ [ iTC_CC_ATP-SwRS- 0  7  1  4  ] 
+PointVSLnotExceedEOA
+ 5  .  2  7  .  3  .  1  2  .   Monitor train energy against restrictive zones or points
+ [ iTC_CC_ATP-SwRS- 0  3  1  8  ]  
+ZoneVSLNotExceed
+ATP shall determine whether train exceeds the vital speed limitation of the restrictive zone  ,  by comparing the energy between the energy of the train and the energy of the zone . 
+ [ iTC_CC_ATP-SwRS- 0  3  2  4  ] 
+PointVSLNotExceed
+ATP shall determine whether train exceeds the vital speed limitation of the restrictive point  ,   by comparing the energy between the energy of the train and the kinetic added potential energy of the point . 
+ 5  .  2  7  .  4  . 	Outputs
+ 5  .  2  8  . 	F 4  6 -Determine Over Energy
+ 5  .  2  8  .  1  .    Inputs
+ 5  .  2  8  .  2  .    Locals
+ 5  .  2  8  .  3  .    Processing
+ATP shall trigger EB to make sure that the train can fulfill the limitation requirements of speed or location  ,  no matter the train energy exceeded the energy of train intersected zone or constraint point of the downstream . 
+ 5  .  2  8  .  3  .  1  .  Motion protection inhibition
+ [ iTC_CC_ATP-SwRS- 0  0  6  4  ] 
+MotionProtectionInhibition
+ 5  .  2  8  .  3  .  2  .  Determing over energy
+ [ iTC_CC_ATP-SwRS- 0  3  2  5  ] 
+TrainPossiblyInOverEnergy
+If the train energy exceeds the zone of point vital speed limitation  ,  ATP shall consider the train possibly over energy . 
+ [ iTC_CC_ATP-SwRS- 0  3  2  6  ] 
+TrainEnergyControlDisabled
+If the RMF or RMR mode selected  ,  ATP shall not monitor the train energy . 
+ [ iTC_CC_ATP-SwRS- 0  3  2  7  ] 
+EBforOverEnergy
+ATP shall request emergency braking if train is possibly in over-energy and train speed control enabled and if following conditions fulfilled :
+the train is not detected at filtered stop  , 
+or the train is detected at filtered stop and :
+safe immobilization customization setting for this control indicates to use emergency brake  , 
+or safe immobilization customization setting for this control indicates to use emergency brake when it was already applied . 
+ [ iTC_CC_ATP-SwRS- 0  3  2  8  ] 
+PBforOverEnergy
+ATP shall request parking braking if train is possibly in over-energy and train speed control enabled and if following conditions fulfilled :
+the train is detected at filtered stop  , 
+and safe immobilization customization setting for this control indicates to use parking brake . 
+ 5  .  2  8  .  4  .    Outputs
+ 5  .  2  9  . 	F 5 -Monitor Train Position and Speed
+ 5  .  3  0  . 	F 5  1 -Moral Time Control
+This module monitors whether the train is staying in the fuzzy time area longer than expected .  
+ 5  .  3  0  .  1  . 	Inputs
+ 5  .  3  0  .  2  . 	Locals
+ 5  .  3  0  .  3  . 	Processing
+Because ATP always overestimates the maximum location of the train front end  ,  it is possible to consider the train has crossed a signal but actually not .  In this case  ,  if the CI cancelled the route downstream of this signal and it changed to restricted status accordingly  ,  ATP cannot prohibit the train to moving on the unauthorized route  ( because ATP think the train has crossed the signal and the CI cannot change the route )  . 
+To avoid this situation  ,  in Block operation mode  ,  ATP needs to consider an additional area downstream the signal  ,  called moral time area .  If the train location intersects with the moral time area more than a configurable period just after the signal change from the permissive to the restrictive status  ,  ATP shall trigger the EB .  In CBTC mode  ,  the monitoring of moral time is handled by ZC . 
+ [ iTC_CC_ATP-SwRS- 0  2  9  2  ] 
+NotOnRestrictiveMoralTimeArea_ 1 
+ [ iTC_CC_ATP-SwRS- 0  2  9  3  ] 
+NotOnRestrictiveMoralTimeArea_ 2 
+ [ iTC_CC_ATP-SwRS- 0  2  9  4  ] 
+If ATP cannot determine train is NotOnRestrictiveMoralTimeArea_ 1   ,  and if this situation lasts more than ATPsetting .  MTtimeout cycles  ,  ATP shall consider that route exclusivity is not guaranteed and RouteExclusivityGuaranted_ 1  shall be set to False . 
+If ATP detects that train is NotOnRestrictiveMoralTimeArea_ 1   ,  route exclusivity shall consider as guaranteed for that direction of travel and RouteExclusivityGuaranted_ 1  shall set to True
+ [ iTC_CC_ATP-SwRS- 0  2  9  5  ] 
+If ATP cannot determine train is NotOnRestrictiveMoralTimeArea_ 2   ,  and if this situation lasts more than ATPsetting . MTtimeout cycles  ,  ATP shall consider that route exclusivity is not guaranteed and RouteExclusivityGuaranted_ 2  shall set to False . 
+If ATP detects that train is NotOnRestrictiveMoralTimeArea_ 2   ,  route exclusivity shall consider as guaranteed for that direction of travel and RouteExclusivityGuaranted_ 2  shall set to True
+ [ iTC_CC_ATP-SwRS- 0  2  9  6  ] 
+HazardousMotionOnNonExclusiveRoute   , If RouteExclusivityGuaranted_ 1  is False  ,  ATP shall request emergency braking if and only if :
+TrainFrontEnd is not END_ 2   , 
+RM forward nor RM reverse are not selected  , 
+and block mode is not selected . 
+If RouteExclusivityGuaranted_ 2  is False  ,  ATP shall request emergency braking if and only if :
+TrainFrontEnd is not END_ 1   , 
+RM forward nor RM reverse driving mode are not selected  , 
+and block mode is not selected . 
+ [ iTC_CC_ATP-SwRS- 0  2  9  7  ] 
+PBonNonExclusiveRoute
+ATP shall request parking braking if train considered too near from a non-exclusive route and if following conditions are fulfilled :
+the train is detected at filtered stop  , 
+safe immobilization customization setting for this control indicates to use parking brake . 
+ [ iTC_CC_ATP-SwRS- 0  2  9  8  ] 
+EBonNonExclusiveRoute
+ATP shall request emergency braking if train considered too near from a non-exclusive route and if following conditions are fulfilled :
+the train is not detected at filtered stop  , 
+or the train is detected at filtered stop and :
+safe immobilization customization setting for this control indicates to use emergency brake  , 
+or safe immobilization customization setting for this control indicates to use emergency brake when it was already applied . 
+ 5  .  3  0  .  4   Outputs
+ 5  .  3  1  . 	F 5  2 -Prevent Train Moving in Undetectable Danger
+This function used to monitor whether the train is running with undetectable danger risk . 
+ 5  .  3  1  .  1  . 	Inputs
+ 5  .  3  1  .  2  . 	Locals
+ 5  .  3  1  .  3  . 	Processing
+ 5  .  3  1  .  3  .  1  . 	Permissive /  not restrictive zone logical inputs
+ [ iTC_CC_ATP-SwRS- 0  7  1  7  ] 
+PermissiveZoneLogicalInput
+ [ iTC_CC_ATP-SwRS- 0  7  1  8  ] 
+NotRestrictiveZoneLogicalInput
+ 5  .  3  1  .  3  .  2  .  No undetectable dange
+ATP shall avoid the train in  " undetectable danger risk "   ,  which means that the train runs on the direction not authorized by the driver or by CCNV in ATB driving mode .  In this case  ,  if the train runs more than a configurable distance  ,  ATP shall trigger emergency brake and keep it for a configurable period . 
+ [ iTC_CC_ATP-SwRS- 0  5  8  2  ] 
+NoUndetectableDanger_ 1 
+The No Undetectable Danger in Extremity  1  shall be consider as permissive status according to project configuration . 
+ [ iTC_CC_ATP-SwRS- 0  5  8  3  ] 
+NoUndetectableDanger_ 2 
+The  " No Undetectable Danger in Extremity  2  "  shall be consider as permissive status according to project configuration . 
+ [ iTC_CC_ATP-SwRS- 0  2  8  5  ] 
+UndetectableDangerRiskForNoNUDE
+If there is neither No Undetectable Danger in Extremity  1  nor No Undetectable Danger in Extremity  2  inputs  ,  ATP shall consider the train is possible under the risk of undetectable danger . 
+ [ iTC_CC_ATP-SwRS- 0  2  8  6  ] 
+PBforUndetectableDangerRisk
+ATP shall request a parking braking if the possibility of an undetected danger has proven to be and if following conditions are fulfilled :
+the train is detected at filtered stop  , 
+safe immobilization customization setting for this control indicates to use parking brake . 
+ [ iTC_CC_ATP-SwRS- 0  2  8  7  ] 
+When the driver does not authorize the train running toward the END_ 1   ,  ATP shall accumulate the distance of the train running toward to the END_ 1  . 
+If in initialization  ,  or the NoUndetectableDanger_ 1  is True  ,  or the train has triggered EB and has stopped  ,  ATP set this distance to  0  ; 
+Else if train kinematic has invalid  ,  ATP set this distance to the default value . 
+Else if the odometer has initialized :
+If the MaximumTrainMotionis greater than  0   ,  ATP accumulate the maximum movement in this cycle with the distance of last cycle ; 
+Or if the MaximumTrainMotionis less than or equal to  0   ,  ATP use the minimum movement of this cycle plus to the distance last cycle  ( in fact  ,  decrease the accumulated distance )  .  The minimum of this accumulated distance is  0  . 
+Otherwise  ,  keep the distance unchanged . 
+ [ iTC_CC_ATP-SwRS- 0  2  8  8  ] 
+NUDEdistanceAccount_ 2 
+When the driver does not authorize the train running toward the END_ 2   ,  ATP shall accumulate the distance of the train running toward to the END_ 2  . 
+If in initialization  ,  or the NoUndetectableDanger_ 2  is True  ,  or the train has triggered EB and has stopped  ,  ATP set this distance to  0  ; 
+Else if train kinematic has invalid  ,  ATP set this distance to the default value . 
+Else if the odometer has initialized :
+if the MaximumTrainMotion is less than  0   ,  ATP accumulate the maximum movement in this cycle with the distance of last cycle ; 
+Else : if the MaximumTrainMotion is greater than or equal to  0   ,  ATP use the minimum movement of this cycle plus to the distance last cycle  ( in fact  ,  decrease the accumulated distance )  .  The minimum of this accumulated distance is  0  . 
+Otherwise  ,  keep the distance unchanged . 
+ [ iTC_CC_ATP-SwRS- 0  2  8  9  ] 
+UndetectDangerMotionWithoutNUDE
+When the train has moved without NUDE more than project-restricted distance  ,  ATP shall set this value to True . 
+ [ iTC_CC_ATP-SwRS- 0  2  9  0  ] 
+The EB request shall be maintained to True during the application time ATPsetting . NUDEtrainStopDurationBeforeEBrelease  ,  if the train has moved without NUDE more than project restricted distance . 
+When UndetectDangerMotionWithoutNUDE is True  ,  ATP shall set EBappliedForMotionWithoutNUDE to True ; 
+When UndetectDangerMotionWithoutNUDE change from True to False  ,   ATP shall maintain EBappliedForMotionWithoutNUDE to True in period ATPsetting . NUDEtrainStopDurationBeforeEBrelease；
+Over the time  ,  set this value to False . 
+ [ iTC_CC_ATP-SwRS- 0  2  9  1  ] 
+EBforUndetectableDangerRisk
+When the train has triggered emergency brake causing by the  " undetectable danger risk "  and has stopped  ,  ATP shall determine whether keeping the EB output according to the project configuration . 
+ 5  .  3  1  .  4  .  Outputs
+ 5  .  3  2  . 	F 5  3 -Monitor Train Speed
+ 5  .  3  2  .  1  . 	Inputs
+ 5  .  3  2  .  2  . 	Processing
+ 5  .  3  2  .  2  .  1  . 	RM mode speed monitoring
+If the RM forward or reverse modes selected  ,  ATP shall monitor whether the train is overspeed based on the RM limitation . 
+ [ iTC_CC_ATP-SwRS- 0  7  4  3  ] 
+ConditionForRMlimitSpeed
+ [ iTC_CC_ATP-SwRS- 0  7  4  4  ] 
+RMlimitSpeedApplied
+ [ iTC_CC_ATP-SwRS- 0  4  9  7  ] 
+NoDangerForRMoverSpeed
+ [ iTC_CC_ATP-SwRS- 0  7  3  4  ] 
+EBforRMoverSpeed
+ 5  .  3  2  .  2  .  2  .  Monitoring memorized location speed limit
+ [ iTC_CC_ATP-SwRS- 0  7  5  1  ] 
+NoDangerForMemorizedLocationOverSpeed
+ [ iTC_CC_ATP-SwRS- 0  7  1  9  ] 
+EBforMemorizedLocationOverSpeed
+ 5  .  3  2  .  3  .  Outputs
+ 5  .  3  3  . 	F 5  4 -Monitor Rollback Train Speed
+ 5  .  3  3  .  1  . 	Inputs
+ 5  .  3  3  .  2  . 	Locals
+ 5  .  3  3  .  3  . 	Processing
+ [ iTC_CC_ATP-SwRS- 0  0  6  5  ] 
+RMRselectedDrivingMode represents the choice of RMR .  
+When the train is not on RMR mode  ,  and the train moved backward related to the active cab  ,  called rollback .  ATP shall request EB if the speed of the rollback is greater than the project limits .  If the rollback distance is greater than the project limits  ,  ATP shall request the permanent EB  ,  which cannot release . 
+ [ iTC_CC_ATP-SwRS- 0  3  0  0  ] 
+When train front extremity is END_ 1  and traction effort is supposed to be in the direction of travel  ,  RollbackDistanceAccount_ 1  is the estimated maximum distance which separates current front extremity  1  position to last most forward position reached by this extremity .  ATP shall evaluate RollbackDistanceAccount_ 1  in order to control that speed does not exceed ATPsetting . MPnotAuthLimitSpeed  . 
+ [ iTC_CC_ATP-SwRS- 0  3  0  1  ] 
+When train front extremity is END_ 2  and traction effort is supposed to be in the direction of travel  ,  RollbackDistanceAccount_ 2  is the estimated maximum distance which separates current front extremity  2  position to last most forward position reached by this extremity .  ATP shall evaluate RollbackDistanceAccount_ 2  in order to control that speed does not exceed ATPsetting . MPnotAuthLimitSpeed . 
+ [ iTC_CC_ATP-SwRS- 0  3  0  2  ] 
+From ATP power-up  ,  UnrecoverableRollbackOverSpeed shall initialize to False . 
+UnrecoverableRollbackOverSpeed shall be set to True if and only if following conditions are fulfilled :
+driving selector indicates that traction effort is supposed to be in the direction of travel  , 
+train front extremity is END_ 2  or END_ 1   , 
+and rollback limit speed currently applicable is null for this direction of travel . 
+Once UnrecoverableRollbackOverSpeed set as True  ,  it shall stay at state True while ATP is not reboot . 
+ [ iTC_CC_ATP-SwRS- 0  3  0  3  ] 
+RollbackOverSpeed shall be True if and only if following conditions are fulfilled :
+driving selector indicates that traction effort is supposed to be in the direction of travel  , 
+train front extremity is END_ 2  or END_ 1   , 
+and movement observed is in the opposite direction of travel  , 
+and over-estimated train speed is greater than ATPsetting . MPnotAuthLimitSpeed currently applicable for this direction of travel and rollback speed restrictions is not null . 
+Or :
+train has reached a position due a rollback movement which is unrecoverable  , 
+Or :
+train kinematic is invalid  , 
+ [ iTC_CC_ATP-SwRS- 0  3  0  4  ] 
+EBforRollbackOverSpeed
+ATP shall request emergency braking if a reverse speed limit is over-run for unwilling rollback or excessive reverse motion . 
+ 5  .  3  3  .  4  .  Outputs
+ 5  .  3  4  . 	F 5  5 -Monitor Reverse Train Speed
+ 5  .  3  4  .  1  . 	Inputs
+ 5  .  3  4  .  2  . 	Locals
+ 5  .  3  4  .  3  . 	Processing
+When the train selected on RMR mode  ,  the train moved reversely related to the active cab .  ATP shall request EB if the speed of the reverse is greater than the project limits .  If the train reversing distance is greater than the project limits  ,  ATP shall keep requesting EB to inhibit train moving on RMR mode . 
+ [ iTC_CC_ATP-SwRS- 0  7  5  9  ] 
+LongDistanceReverseAuthorized represents the authorization of long distance reverse .  
+ [ iTC_CC_ATP-SwRS- 0  3  0  5  ] 
+When train front extremity is END_ 1  and traction effort is supposed to be in the opposite direction of travel  ,  ReverseDistanceAccount_ 1  is the estimated maximum distance which separates current front extremity  1  position to last most forward position reached by this extremity .  ATP shall evaluate ReverseDistanceAccount_ 1  in order to control that speed does not exceed reverse speed limit function . 
+ [ iTC_CC_ATP-SwRS- 0  3  0  6  ] 
+When train front extremity is END_ 2  and traction effort is supposed to be in the opposite direction of travel  ,  ReverseDistanceAccount_ 2  is the estimated maximum distance which separates current front extremity  2  position to last most forward position reached by this extremity .  ATP shall evaluate ReverseDistanceAccount_ 2  in order to control that speed does not exceed ReverseSpeedRestrictions reverse speed limit function . 
+ [ iTC_CC_ATP-SwRS- 0  7  5  3  ] 
+ReverseSpeedRestrictions
+ [ iTC_CC_ATP-SwRS- 0  3  0  7  ] 
+ReverseOverSpeed shall be True if following conditions fulfilled :
+driving selector indicates that traction effort is supposed to be in the opposite direction of travel  , 
+train front extremity is END_ 2  or END_ 1   , 
+and movement observed is the opposite direction of travel  , 
+and :
+over-estimated train speed is greater than reverse speed restrictions currently applicable for this direction of travel  , 
+or else : if reverse speed restrictions currently applicable is null for this direction of travel  , 
+Or else : train kinematic is invalid . 
+ [ iTC_CC_ATP-SwRS- 0  3  0  8  ] 
+EBforReverseOverSpeed
+ATP shall request emergency braking if a reverse speed limit is over-run for unwilling rollback or excessive reverse motion . 
+ 5  .  3  4  .  4  .  Outputs
+ 5  .  3  5  . 	F 6 -Protect Passengers Entrance and Exit from the Train
+This module describes the requirements for passengers entrance and exist of the train . 
+ 5  .  3  6  . 	F 6  1 -Elaborate Door Opening Authorization
+This module is judging the criteria for door opening . 
+ 5  .  3  6  .  1  . 	Inputs
+ 5  .  3  6  .  2  . 	Locals
+ 5  .  3  6  .  3  . 	Processing
+Only when the ATP has sure that the train is completely located in the platform area and the safely immobilized  ,  ATP shall allow the train to open the specific door in the side of platform . 
+ 5  .  3  6  .  3  .  1  . 	Vital passenger exchange zone
+The LEFT or RIGHT  ,  defined as attributes of VPEZ  ,  PSD or EVAC singularities in track map  ,  means the platform is on the left of right side of the train seen as towards the UP orientation . 
+ [ iTC_CC_ATP-SwRS- 0  2  6  2  ] 
+ATP shall determine whether there are intersection between the range of train locations and the vital passenger exchange zone of the side-A :
+In initialization or train delocalization  ,  set the TrainInterVPEZ_A as False ; 
+If there are intersection between the range of train locations  ( from the minimum train tail to the maximum train head )  and the vital passenger exchange zone  ( composing by a pair of SGL_VPEZ singularities with opposite direction in the train map )   ,  and the train door side A correspond to the platform according with Table  5  1  2   ,  set TrainInterVPEZ_A as True :
+Otherwise  ,  set TrainInterVPEZ_A as False . 
+ [ iTC_CC_ATP-SwRS- 0  2  6  3  ] 
+ATP shall determine whether there are intersection between the range of train locations and the vital passenger exchange zone of the side-B :
+In initialization or train delocalization  ,  set the TrainInterVPEZ_B as False ; 
+If there are intersection between the range of train locations  ( from the minimum train tail to the maximum train head )  and the vital passenger exchange zone  ( composing by a pair of SGL_VPEZ singularities with opposite direction in the train map )   ,  and the train door side B correspond to the platform according with Table  5  1  2   ,  set TrainInterVPEZ_B as True :
+Otherwise  ,  set TrainInterVPEZ_B as False . 
+ [ iTC_CC_ATP-SwRS- 0  5  6  0  ] 
+VPEZid_A records the ID of the VPEZ  ,  which intersected with the location of train on side A . 
+If the TrainInterVPEZ_A  ,  set as the ID of this VPEZ . 
+Otherwise  ,  set as None . 
+ [ iTC_CC_ATP-SwRS- 0  5  6  1  ] 
+VPEZid_B records the ID of the VPEZ  ,  which intersected with the location of train on side B . 
+If the TrainInterVPEZ_B  ,  then set as the ID of this VPEZ . 
+Otherwise  ,  set as None . 
+ [ iTC_CC_ATP-SwRS- 0  2  6  4  ] 
+TrainIncludedInVPEZ_A  ,  ATP shall determine whether the whole train location belongs to one vital passenger exchange zone VPEZid_A . 
+In initialization or train delocalization  ,  set the TrainIncludedInVPEZ_A as False ; 
+If the range of train locations  ( from the minimum train tail to the maximum train head )  belongs to a VPEZ  ,  and the TrainInterVPEZ_A is True  ,  then ATP shall set TrainIncludedInVPEZ_A as True ; 
+Otherwise  ,  set TrainIncludedInVPEZ_A as False . 
+ [ iTC_CC_ATP-SwRS- 0  2  6  5  ] 
+TrainIncludedInVPEZ_B  ,  ATP shall determine whether the whole train location belongs to one vital passenger exchange zone VPEZid_B . 
+In initialization or train delocalization  ,  set the TrainIncludedInVPEZ_B as False ; 
+If the range of train locations  ( from the minimum train tail to the maximum train head )  belongs to a VPEZ  ,  and the TrainInterVPEZ_B is True  ,  then ATP shall set TrainIncludedInVPEZ_B as True ; 
+Otherwise  ,  set TrainIncludedInVPEZ_B as False . 
+ 5  .  3  6  .  3  .  2  . 	Safety immobilized
+The ATP needs to know whether the train has applied the parking or emergency brake  ,  which used to judge the safe immobilization . 
+ [ iTC_CC_ATP-SwRS- 0  5  7  6  ] 
+TrainEmergencyBrakeApplied shows that whether the train has applied emergency brake .  
+If the project is not configured  ,  ATP shall consider the emergency brake has not applied by the train .  
+Otherwise  ,  if either of the end is in emergency brake  ,  ATP considers the emergency brake has applied . 
+ [ iTC_CC_ATP-SwRS- 0  0  7  3  ] 
+The term TrainParkingBrakeApplied stands for that either of the train ends is in parking brake . 
+ [ iTC_CC_ATP-SwRS- 0  3  2  9  ] 
+ATP shall consider that train safely immobilized if :
+Train brake has detected safely applied  ,  or train parking brake is detected ; 
+And train is detected at filtered stop . 
+ 5  .  3  7  .  3  .  3  . 	Door opening authorization
+ [ iTC_CC_ATP-SwRS- 0  7  3  7  ] 
+NoVitalCorrectlyDocked
+ [ iTC_CC_ATP-SwRS- 0  3  3  0  ] 
+LocalATPenableDoorOpening_A
+ATP shall determine whether train doors on side A opening .  The rules are following :
+ [ iTC_CC_ATP-SwRS- 0  3  3  1  ] 
+LocalATPenableDoorOpening_B
+ATP shall determine whether train doors on side B opening .  The rules are following :
+ [ iTC_CC_ATP-SwRS- 0  7  2  0  ] 
+EnableDoorOpening_A
+ [ iTC_CC_ATP-SwRS- 0  7  2  1  ] 
+EnableDoorOpening_B
+ 5  .  3  6  .  4  .  Outputs
+ 5  .  3  7  . 	F 6  2 -Control PSD Opening and Closing Order
+According to the intersection condition between train location and PSD area  ,  ATP shall judge to establish or end the communication with the specified interlock devices .  After establishment succeeded  ,  ATP should send the PSD order come from CCNV to the interlock through safe communication protocols .  ATP can conduct the MAX_CONNECTED_PSD_NB with interlock at the same time . 
+ 5  .  3  7  .  1  . 	Inputs
+ 5  .  3  7  .  2  . 	Locals
+ 5  .  3  7  .  3  . 	Processing
+ 5  .  3  7  .  3  .  1  . 	Communicate with PSD
+ [ iTC_CC_ATP-SwRS- 0  2  6  6  ] 
+AlignPSDzone_A  ,  ATP shall determine whether there are intersection between the range of train locations and the platform screen doors zone of the side-A . 
+PSDid_A  ,  the id of the PSD on side-A intersects with train location . 
+In initialization or train delocalization  ,  set AlignPSDzone_A as False and PSDid_A as None . 
+If there are intersection between the range of train locations  ( from the minimum train tail to the maximum train head )  and the PSD zone  ( composing by a pair of SGL_PSD_ZONE singularities with opposite direction in the train map )   ,  and the train door side A correspond to the platform according with Table  5  1  2   ,  set AlignPSDzone_A as True  ,  and records PSDid_A as the PSD’s id :
+Otherwise  ,  set AlignPSDzone_A as False and PSDid_A as None . 
+ [ iTC_CC_ATP-SwRS- 0  2  6  8  ] 
+AlignPSDzone_B  ,  ATP shall determine whether there are intersection between the range of train locations and the platform screen doors zone of the side-A . 
+PSDid_B  ,  the id of the PSD on side-A intersects with train location . 
+In initialization or train delocalization  ,  set AlignPSDzone_B as False and PSDid_B as None . 
+If there are intersection between the range of train locations  ( from the minimum train tail to the maximum train head )  and the PSD zone  ( composing by a pair of SGL_PSD_ZONE singularities with opposite direction in the train map )   ,  and the train door side B correspond to the platform according with Table  5  1  2   ,  set AlignPSDzone_B as True  ,  and records PSDid_B as the PSD’s id :
+Otherwise  ,  set AlignPSDzone_B as False and PSDid_B as None . 
+ [ iTC_CC_ATP-SwRS- 0  1  3  6  ] 
+PSDoperation_A and PSDoperation_B structured as ST_PSD_OPERATION  ,  used to obtain the PSD controlling order from CCNV . 
+ [ iTC_CC_ATP-SwRS- 0  4  6  7  ] 
+ATP shall determine whether to establish communication with the correlative CI according to request from CCNV :
+When there is at least one id of PSDoperation_A or PSDoperation_B is not none  ,  ATP shall set CommunicatedWithPSD to True :
+Otherwise  ,  set CommunicatedWithPSD to False . 
+When the train is running in the station equipped with PSD  ,  ATP needs to communicate with CI and get the PSD status information .  According to the configuration data  ,  ATP will process the PSD from CI  ,  and the index is the id of PSD  ,  just as shown in the ST_PSD_TABLE
+ [ iTC_CC_ATP-SwRS- 0  1  1  1  ] 
+In initialization  ,  all PSD DoorClosed of TableOfPSDPlatform set as False  ,  and the valid period is zero .  Later on  ,  if receiving correct CI_IOstatus  ,  on the basis of ID number the status of related PSD doorClosed from TableOfPSDPlatform is updated and the DoorStatusValidityTime is set as ATPsetting . PSDstatusValidityTime subtracted the delay of FSFB 2  message . 
+ [ iTC_CC_ATP-SwRS- 0  1  1  2  ] 
+If ATP does not receive the CI_IOstatus from CI  ,  or if this message detected as False  ,  ATP shall update the PSD status of TableOfPSDPlatform  ,  i . e .  it is necessary to minus DoorStatusValidityTime with one .  If the value is less than or equal to zero  ,  the status of DoorClosed is set as False ;  otherwise the status keeps the same . 
+ 5  .  3  7  .  3  .  2  . 	PSD status
+In CBTC mode  ,  when train is moving  ,  ATP shall monitor the PSD status by the variant from ZC ;  and on the other hand  ,  when train is stopping or just beginning to start  ,  ATP shall use the PSD status adopted from the communication with interlock device .  In the block mode  ,  ATP will not consider the PSD status when train is moving  ( i . e .  Will consider the PSD is closed and locked )  ;  and when train is stopping or starting  ,  ATP will use the PSD information from interlock devices .  Therefore  ,  ATP should consider the updating of PSDzoneStatus_A and PSDzoneStatus_B based on the whether ATP is master or not  ,  the information from interlock device  ,  ZC or BM . 
+ [ iTC_CC_ATP-SwRS- 0  3  3  2  ] 
+UsingPSDstatusFromCI
+Only when the train fulfilled the following conditions  ,  ATP shall use the PSD status from the CI :
+The train location intersects with a PSD zone ; 
+And the train is filtered stopped or just started moving . 
+ [ iTC_CC_ATP-SwRS- 0  1  3  4  ] 
+MasterCCcore shows whether the status from CCNV is the main controlled CC . 
+ [ iTC_CC_ATP-SwRS- 0  1  5  5  ] 
+PSDzoneStatus_A
+If the ATP is the master CC  ,  then the A-side PSD state updating rules are as follows :
+ [ iTC_CC_ATP-SwRS- 0  5  3  2  ] 
+PSDzoneStatus_B
+If the ATP is the master CC  ,  then the B-side PSD state updating rules are as follows :
+ [ iTC_CC_ATP-SwRS- 0  5  3  3  ] 
+If the ATP is not the master CC  ,  then the A-side PSD state updating rules are as follows :
+ [ iTC_CC_ATP-SwRS- 0  5  3  4  ] 
+If the ATP is not the master CC  ,  then the B-side PSD state updating rules are as follows :
+ [ iTC_CC_ATP-SwRS- 0  7  2  2  ] 
+PSDstatusNonVital_A
+ [ iTC_CC_ATP-SwRS- 0  7  2  3  ] 
+PSDstatusNonVital_B
+ 5  .  3  7  .  3  .  3  . 	PSD order
+For the control order of the PSD  ,  ATP shall generate according to the request of the CCNV and the safety communication protocol defined in the project configuration . 
+ [ iTC_CC_ATP-SwRS- 0  3  3  3  ] 
+PSDmanagerOrder_A
+The rules to generate the PSD manage order on side A shall follow the pseudo-codes .  In which if the PSD id from CCNV is not equal to the id in ATP's track map  ,  ATP shall prohibit the PSD opening . 
+In the above ARDL  ,  the Open_PSD_Configuration and Close_PSD_Of_Platform are control words defined in the project configuration . 
+ [ iTC_CC_ATP-SwRS- 0  3  3  4  ] 
+PSDmanagerOrder_B
+The rules to generate the PSD manage order on side B shall follow the pseudo-codes .  In which if the PSD id from CCNV is not equal to the id in ATP's track map  ,  ATP shall prohibit the PSD opening . 
+In the above ARDL  ,  the Open_PSD_Configuration and Close_PSD_Of_Platform are control words defined in the project configuration . 
+ [ iTC_CC_ATP-SwRS- 0  3  3  5  ] 
+PSDplatformManagerOpeningOrder
+ATP shall determine whether itself opening the PSD in this cycle . 
+ 5  .  3  7  .  3  .  4  . 	Send PSD command
+ [ iTC_CC_ATP-SwRS- 0  3  3  6  ] 
+PSDopeningCommand 
+ATP shall determine whether itself or the redundant ATP opening the PSD in this cycle . 
+ [ iTC_CC_ATP-SwRS- 0  4  4  4  ] 
+When communicating with the CI  ,  if the PSDmanagerOrder_A which comes from CCNV was valid  ,  ATP shall set the CIsetting [  0  ]  according to the PSDmanagerOrder_A and the configuration of the PSD . 
+ [ iTC_CC_ATP-SwRS- 0  4  4  5  ] 
+When communicating with the CI  ,  if the PSDmanagerOrder_B  ,  which comes from CCNV  ,  was valid  ,  ATP shall set the CIsetting [  1  ]  according to the PSDmanagerOrder_B and the configuration of the PSD . 
+ 5  .  3  7  .  4  . 	Outputs
+ 5  .  3  8  . 	F 6  3 -Monitor Status of Doors
+This module describes the ATP requirements for the monitor status of doors . 
+ 5  .  3  8  .  1  . 	Inputs
+ 5  .  3  8  .  2  . 	Locals
+ 5  .  3  8  .  3  . 	Processing
+ 5  .  3  8  .  3  .  1  . 	Train doors monitoring
+When the train stopped and opened the door in the station  ,  ATP shall keep outputting parking brake . 
+ [ iTC_CC_ATP-SwRS- 0  0  7  0  ] 
+The AllTrainDoorsClosedAndLocked stands for the condition that either side of both train ends collect TDCL  ,  i . e .  both side of door is closed and locked . 
+ [ iTC_CC_ATP-SwRS- 0  3  3  7  ] 
+ATP shall not monitor the status of train doors when InhibitControlTrainDoorsStatus is selected . 
+ [ iTC_CC_ATP-SwRS- 0  8  0  4  ] 
+NoDangerForTrainDoorsNotClosedAndLocked
+ [ iTC_CC_ATP-SwRS- 0  3  3  8  ] 
+PbforTrainDoorsNotClosedAndLocked
+If the train is aligning in a PSD or intersecting with a vital passage exchange zone  ,  and the RMF or RMR does not selected  ,  ATP shall keep triggering parking brake when the train doors does not closed and locked . 
+ [ iTC_CC_ATP-SwRS- 0  3  3  9  ] 
+EBforPBnotAppliedDueToTrainDoors
+If ATP has triggered parking brake for train doors opening  ,  but it does not applied by the rolling stock  ,  ATP shall trigger the emergency brake . 
+ [ iTC_CC_ATP-SwRS- 0  3  4  0  ] 
+NoDangerForDepartureWithoutTDCL
+ATP shall determine whether the train is departure without TDCL . 
+ [ iTC_CC_ATP-SwRS- 0  7  4  9  ] 
+EBforDepartureWithoutTDCL
+If ATP needs to monitor the status of train doors  ,  ATP shall trigger EB if train determine without TDCL :
+ [ iTC_CC_ATP-SwRS- 0  7  9  9  ] 
+ATP shall not monitor the status of train doors open without door opening enable if InhibitProtectionMovingWithoutTDCL is selected . 
+ [ iTC_CC_ATP-SwRS- 0  8  0  0  ] 
+NoDangerForMovingWithoutTDCL
+ [ iTC_CC_ATP-SwRS- 0  8  0  1  ] 
+EBforMovingWithoutTDCL
+ 5  .  3  8  .  3  .  2  . 	PSD status monitoring
+In the non-RM mode  ,  or in block mode with PSD communication  ,  ATP shall guarantee the train cannot move while the PSD has opened or the opening PSD order is sending .  Otherwise  ,  ATP shall trigger EB . 
+ [ iTC_CC_ATP-SwRS- 0  3  4  1  ] 
+InhibitControlPSDstatus
+The conditions ATP does not control PSD can be configured by project . 
+ [ iTC_CC_ATP-SwRS- 0  3  4  2  ] 
+If the train stopped or just started moving  ,  and the status of all aligned PSD are closed  ,  ATP shall consider the AllPSDclosedAndLocked is True . 
+ [ iTC_CC_ATP-SwRS- 0  7  5  0  ] 
+NoDangerforUnexpectedPSDopening
+ATP shall determine whether the train starts moving without the aligned PSD closed . 
+ [ iTC_CC_ATP-SwRS- 0  3  4  3  ] 
+EBforUnexpectedPSDopening
+If in charge of the PSD control  ,  ATP shall trigger emergency brake when train just started moving but PSD does not closed . 
+ [ iTC_CC_ATP-SwRS- 0  8  0  3  ] 
+NoDangerForPSDnotClosedAndLocked
+ [ iTC_CC_ATP-SwRS- 0  3  4  4  ] 
+PBforPSDnotClosedAndLocked
+If one of the statuses of the aligned PSD does not closed when train stopped  ,  ATP shall trigger parking brake . 
+ [ iTC_CC_ATP-SwRS- 0  3  4  5  ] 
+EBforPBnotAppliedDueToPSD
+If ATP has triggered the parking brake for the PSD opening  ,  but it does not applied by the rolling stock  ,  ATP shall trigger the emergency brake . 
+ [ iTC_CC_ATP-SwRS- 0  3  4  6  ] 
+PSDopeningCommandValid
+ATP shall monitor the PSD opening command whether valid by the following rules :
+If the PSD opening command is True in the current cycle  ,  ATP consider this command is valid ; 
+Or else :  ,  if the PSD opening command become from True to False  ,  ATP shall start to counter the cycles :
+If the PSD opening command has become False and has lasted more than ATPsetting . PSDopeningCommandValidityTime  ,  then ATP shall consider the PSD opening command as invalid ; 
+Or else :  ,  ATP still consider the PSD opening command as valid . 
+Otherwise  ,  ATP consider the PSD opening command as invalid . 
+ [ iTC_CC_ATP-SwRS- 0  3  4  7  ] 
+InhibitPSDopeningSupervisedByATP
+ [ iTC_CC_ATP-SwRS- 0  3  4  8  ] 
+PBforPSDopenedAndSupervisedByATP
+If ATP needs to supervise the PSD opening status  ,  ATP shall trigger parking brake when the PSD opening command is valid . 
+ 5  .  3  8  .  4  . 	Outputs
+ 5  .  3  9  . 	F 6  4 -Protect Passengers during Emergency Evacuation
+This module is for emergency evacuation .  
+ 5  .  3  9  .  1  . 	Inputs
+ 5  .  3  9  .  2  . 	Locals
+ 5  .  3  9  .  3  . 	Processing
+ 5  .  3  9  .  3  .  1  . 	Hold detrainment door closed
+For the project equipped with the detrained door in driving cab  ,  when the train stopped or dynamic measurement invalid  ,  if emergency handle is pulling down  ,  the ATP shall trigger EB  ,  unlock the door for passengers getting out . 
+ [ iTC_CC_ATP-SwRS- 0  0  7  2  ] 
+EmergencyHandleNotPulledEnd 1  stands for the closed emergency door of END_ 1  .  If the train does not allocate with emergency door in the cab  ,  it is certain that the emergency door does not opened .  
+ [ iTC_CC_ATP-SwRS- 0  7  2  4  ] 
+EmergencyHandleNotPulledEnd 2  stands for the closed emergency door of End 2  .  If the train does not allocate with emergency door in the cab  ,  it is certain that the emergency door does not opened .  
+ [ iTC_CC_ATP-SwRS- 0  3  4  9  ] 
+HoldDoorsClosedTrainEnd 1 
+ATP shall keep hold the train END_ 1  door closed when one of the following conditions fulfilled :
+Train kinematics is valid and the train does not stop ; 
+Or the emergency handle of END_ 1  is not pulled ; 
+ [ iTC_CC_ATP-SwRS- 0  3  5  0  ] 
+HoldDoorsClosedTrainEnd 2 
+ATP shall keep hold the train END_ 2  door closed when one of the following conditions fulfilled :
+Train kinematics is valid and the train does not stop ; 
+Or the emergency handle of END_ 2  is not pulled ; 
+ [ iTC_CC_ATP-SwRS- 0  3  5  1  ] 
+EBforNotAllTrainEndHoldDoorsClosed
+If ATP does not hold the train end door  ,  then trigger emergency brake . 
+ [ iTC_CC_ATP-SwRS- 0  7  3  8  ] 
+EmergencyDetrainDoorLockingEnd 1 
+ [ iTC_CC_ATP-SwRS- 0  7  3  9  ] 
+EmergencyDetrainDoorLockingEnd 2 
+ 5  .  3  9  .  3  .  2  . 	Hazardous Evacuation zone
+ [ iTC_CC_ATP-SwRS- 0  2  7  3  ] 
+ATP shall consider the evacuation is not possible on side-A when there are intersection between the range of train locations and the hazardous evacuation zone of the side-A :
+In initialization or not TrainLocatedOnKnownPath  ,  set the EvacuationNotPossible_A as False ; 
+Or else  ,  if there are intersection between the range of train locations  ( from the minimum train tail to the maximum train head )  and the vital passenger exchange zone  ( composing by a pair of SGL_HAZAR_EVAC_ZONE singularities with opposite direction in the train map )   ,  and the train door side A correspond to the EVAC according with Table  5  1  2   ,  set EvacuationNotPossible_A as True . 
+Otherwise  ,  set EvacuationNotPossible_A as False . 
+ [ iTC_CC_ATP-SwRS- 0  2  7  4  ] 
+ATP shall consider the evacuation is not possible on side-B when there are intersection between the range of train locations and the hazardous evacuation zone of the side-B :
+In initialization or not TrainLocatedOnKnownPath  ,  set the EvacuationNotPossible_B as False ; 
+Or else  ,  if there are intersection between the range of train locations  ( from the minimum train tail to the maximum train head )  and the vital passenger exchange zone  ( composing by a pair of SGL_HAZAR_EVAC_ZONE singularities with opposite direction in the train map )   ,  and the train door side B correspond to the EVAC according with Table  5  1  2   ,  set EvacuationNotPossible_B as True . 
+Otherwise  ,  set EvacuationNotPossible_B as False . 
+ 5  .  3  9  .  3  .  3  .  Hold train side doors closed
+When the train speed is higher than project configuration data  ,  ATP shall request the train to close and lock on both sides of the door .  Only when the speed is lower than the value of the project configuration data  ,  and this side permits for the escape  ( is determined by restricted escape area in the lines )   ,  or there is no end door configured in the cab  ,  ATP shall allow to release the door locking request .  
+ [ iTC_CC_ATP-SwRS- 0  3  5  2  ] 
+The conditions ATP determining the HoldDoorsClosed_A show as following ARDL :
+ [ iTC_CC_ATP-SwRS- 0  3  5  3  ] 
+The conditions ATP determining the HoldDoorsClosed_B show as following ARDL :
+ 5  .  3  9  .  3  .  4  Evacuation requirement
+When the train is just leaving from the platform or stops out of the station  ,  if the passenger pulls down the emergency handle  ,  ATP shall trigger EB to stop the train .  If the train is running on the interval region  ,  when the passenger pulls down the handle  ,  the ATP shall not output EB . 
+ [ iTC_CC_ATP-SwRS- 0  3  5  4  ] 
+TrainDockedInStation
+ATP shall determine whether the train has docked in the station correctly according to conditions of train stopping and doors opening enable . 
+ [ iTC_CC_ATP-SwRS- 0  3  5  5  ] 
+The train is said to be leaving the station :
+if since last time train has been detected docked in station  ( TrainDockedInStation )   ,  the cumulated of the absolute value of MaximumTrainMotion is in the range  [  0   ,  ATPsetting . EvacuationStationAreaLength ]  and no train kinematic invalidation occurs .  
+or else  ,  if the train kinematics is invalid  ,  ATP shall set TrainLeavingStation as False and clear the cumulated distance . 
+ [ iTC_CC_ATP-SwRS- 0  0  7  1  ] 
+EmergencyHandleNotPulledSide shows that the emergency handles is not pulled down . 
+ [ iTC_CC_ATP-SwRS- 0  3  5  6  ] 
+If the train is just leaving the station and the side doors emergency handles are pulled  ,  ATP shall require EvacuationWhileLeavingStation . 
+ [ iTC_CC_ATP-SwRS- 0  3  5  7  ] 
+If the train does not stop on the doors opening enable area and the side doors emergency handles pulled  ,  ATP shall require EvacuationWithTrainStopped . 
+ [ iTC_CC_ATP-SwRS- 0  7  2  6  ] 
+InhibitProtectionEvacuationInDistance
+ [ iTC_CC_ATP-SwRS- 0  7  2  7  ] 
+InhibitProtectionEvacuationWithStop
+ [ iTC_CC_ATP-SwRS- 0  3  5  8  ] 
+EBforEvacuationWhileTrainLeavingStation
+If the train leaving station evacuation has been required  ,  ATP shall trigger the emergency brake . 
+ [ iTC_CC_ATP-SwRS- 0  7  4  8  ] 
+EBforEvacuationWithTrainStopped
+If the train stopped evacuation has been required  ,  ATP shall trigger the emergency brake . 
+ 5  .  3  9  .  4  . 	Outputs
+ 5  .  4  0  . 	F 7 -Generate Output Orders
+ 5  .  4  1  . 	F 7  1 -Outputs to Rolling-stock
+ 5  .  4  1  .  1  . 	Inputs
+ 5  .  4  1  .  2  . 	Locals
+ 5  .  4  1  .  3  . 	Processing
+ 5  .  4  1  .  3  .  1  . 	Parking brake
+ATP shall control the parking brake of the train .  Due to the safety oriented  ,  ATP shall set the output port as restricted status when outputting the parking brake order  ,  and set the port as permissible status when the ATP does not send parking brake . 
+ [ iTC_CC_ATP-SwRS- 0  1  3  3  ] 
+PBforOperationalRequest stands for the ZVRD output order from CCNV . 
+ [ iTC_CC_ATP-SwRS- 0  3  5  9  ] 
+TrainParkingBrakeRequested  ,  determine whether to apply parking brake .  This variable shall be True when one of the following conditions met :
+Train is in front of a possibly non-exclusive route  , 
+Synthesis of speed constraints on the train implies that it is not allowed to move anymore .  Any movement may lead to an hazardous situation  , 
+Train is located on a passenger exchange area with PSD and train doors are not proven closed and locked  , 
+Train is located on a passenger exchange area with PSD and PSD are not proven closed and locked  , 
+There is a possibility of undetectable dangers  , 
+An operational parking brake is requested  , 
+The PSD are opened and are under the supervision of ATP  , 
+The EB has been requested in this cycle . 
+ [ iTC_CC_ATP-SwRS- 0  3  6  0  ] 
+InhibitParkingBrake  , ATP software do not apply the parking brake . 
+ 5  .  4  1  .  3  .  2  .  Emergency brake
+ATP shall control the emergency brake of the train .  Due to the safety oriented  ,  ATP will set the output port as restricted status when outputting the emergency brake order  ,  and set the port as permissive status when the ATP does not send trigger the brake . 
+ [ iTC_CC_ATP-SwRS- 0  5  5  6  ] 
+The Coreld and SubSystemID of the ATP and redundant ATP need to compare for the consistency  ,  which records in IncompatibleDistantATP .  In initialization  ,  the message from redundant ATP cannot be used .  On the other hand  ,  when SubSystemID in the Dataplug read by redundant ATP is the same  ,  but the Coreld is different  ,  both ATP regards as consistency .  Otherwise  ,  ATP would trigger emergency brake .  
+ [ iTC_CC_ATP-SwRS- 0  2  7  1  ] 
+ApproachableSignalOverrun  ,  ATP shall determine whether the location of maximum train head overruns an approachable signal with overlap established . 
+When all of the following conditions fulfilled  ,  ATP considers the train has overrun a restricted signal in this cycle  ,  and set ApproachableSignalOverrun as True . 
+not MotionProtectionInhibition ; 
+And ApproachableSignalOverrun was False at the last cycle ; 
+And the moving direction in current cycle is toward on the train front end ; 
+And the maximum location of train front end passes the position of the signal with overlap attribute in this cycle ; 
+And the variants status of the signal is overlap established ( refer to Table  5  9  )  . 
+Otherwise  ,  ATP set ApproachableSignalOverrun as False . 
+ [ iTC_CC_ATP-SwRS- 0  1  3  2  ] 
+EBforOperationalRequest
+ATP shall trigger emergency brake according to CCNV‘s operational emergency brake request . 
+ [ iTC_CC_ATP-SwRS- 0  3  6  1  ] 
+TrainEmergencyBrakeRequested
+ATP shall control emergency brake output according following emergency braking requests from control functions :
+moral-time control function has detected an hazardous situation  ( route exclusivity violation )  ; 
+train speed is no longer compliant with respect of whole speed restriction of guide way ; 
+an approachable speed limit has been over-run  ( RM speed limit or memorized location speed limit )  ; 
+an over-speed in reverse direction of travel has been detected ; 
+an emergency evacuation is required for passengers ; 
+train departure with not all doors closed and locked has been detected ; 
+the train starts to move on a PSD zone which status is not  " all PSD proven closed and locked "  ; 
+train has moved although there are potential undetectable dangers ; 
+an operational emergency braking has been requested by CC-Non Vital ; 
+train end doors are not closed and locked ; 
+not all doors closed and locked has been detected on a PSD zone and parking brake is not applied  ,  
+not all PSD closed and locked has been detected on a PSD zone and parking brake is not applied ; 
+the approachable signal is overrun ; 
+the VLE- 2  safe timer failed ; 
+the information of Dataplug in both ends of cab is inconsistent . 
+ [ iTC_CC_ATP-SwRS- 0  3  6  2  ] 
+InhibitEmergencyBrake
+If an emergency braking request ordered by a control function  ,  ATP shall not inhibit emergency brake until train filtered-stop reached . 
+ATP shall inhibit emergency brake if and only if train detected at filtered stop and there is no emergency braking request from control functions . 
+ 5  .  4  1  .  3  .  3  .  Vital outputs
+For different project  ,  the internal calculating output ports of ATP are configurable  ,  which defined in the project vital settings . 
+ [ iTC_CC_ATP-SwRS- 0  5  4  6  ] 
+CCworkOvertime
+ATP shall monitor the CC continuous work time .  If the CC is running more than MAX_RESET_TIME  ( the value is far less than MAX_ATP_LOOP_HOUR )   ,  the ATP shall set all output to VIOM as restricted status . 
+ [ iTC_CC_ATP-SwRS- 0  5  8  4  ] 
+VIOM 1 OutNotDisabled  , VIOM 2 OutNotDisabled
+Whether CCNV request the channel of VIOM shall be disabled or not . 
+NOTES：
+When some vital outputs are  " not disabled "  by CCNV  ,  ATP shall set their values as commands calculated by ATP ;  and if CCNV disabled these outputs channel  ,  ATP shall set their values as restriction .  That is to say  ,  CCNV can coerce some output channels as restricted status  ( to the safe side )   ,  but cannot coerce them as permissive  ( to the hazardous side )  .  This function normally used for the combined test . 
+ [ iTC_CC_ATP-SwRS- 0  4  6  5  ] 
+VIOM 1 VitalOut  , VIOM 2 VitalOut
+ [ iTC_CC_ATP-SwRS- 0  4  5  5  ] 
+According to  [ REF 5  ]   ,  the commands ATP sent to VIOM shall attach the current ATPtime  ,  cycle synchronization check word Trace and Dt  ,  safety clock state SafeTimerFailed  ,  MasterCCcore  ,  the LatestVIOM 1 LoopHourVIOM and LatestVIOM 2 LoopHourVIOM needed to feedback to the respective VIOM . 
+ [ iTC_CC_ATP-SwRS- 0  7  5  2  ] 
+OutOfCode
+ 5  .  4  1  .  4  . 	Outputs
+ 5  .  4  2  . 	F 7  2 -Outputs to ZC
+ATP shall send the Location Report to ZC as far as possible .  After ATP powered up and the communication with LC had fulfilled  ,  and get the current ZC id  ,  it shall communicate with ZC .  When the train passes across two ZC  ,  ATP should also send the Location Report to both ZC .  The information of Location Report includes train recognition information  ,  ATP status  ,  and train location  ,  so that ZC can calculate the AP scope  ,  properties and EOA of the train . 
+ 5  .  4  2  .  1  . 	Inputs
+ 5  .  4  2  .  2  . 	Locals
+ 5  .  4  2  .  3  . 	Processing
+ 5  .  4  2  .  3  .  1  . 	Location Report creation
+ [ iTC_CC_ATP-SwRS- 0  4  0  1  ] 
+TrainHeadOrientation
+ATP shall send the orientation of minimum location of current active cab id to the ZC .  For the rule can refer to SwRS- 0  4  0  3  . 
+ [ iTC_CC_ATP-SwRS- 0  4  0  3  ] 
+TrainHeadMinLocation
+ATP shall send the minimum head location of the active cab to the ZC  ,  including the block id and its abscissa .  According to  [ REF 5  ]   ,  the unit of the abscissa in Location Report is  0  .  5  meter  ,  so the ATP needs to convert its internal unit to match that .  The conversion shall be safety-oriented  ,  which means the envelope of the train location tend to be  " stretched "  to the both ends .  The rules of conversion are as following ARDL :
+In above ARDL  ,  the ABSCISSA_TO_HALF_METER means the coefficient of unit conversion . 
+ [ iTC_CC_ATP-SwRS- 0  4  0  4  ] 
+TrainHeadCoupledStatus
+ATP shall send the coupled status of the active train cab to the ZC . 
+ [ iTC_CC_ATP-SwRS- 0  4  0  5  ] 
+TrainTailCabId
+ATP shall send the current inactive cab id to the ZC . 
+ [ iTC_CC_ATP-SwRS- 0  4  0  6  ] 
+TrainTailOrientation
+ATP shall send the orientation of the minimum location of inactive cab id to the ZC .  For the rule can refer to SwRS- 0  4  0  8  . 
+ [ iTC_CC_ATP-SwRS- 0  4  0  8  ] 
+TrainTailMinLocation
+ATP shall send the minimum tail location of the active cab to the ZC  ,  including the block id and its abscissa .  According to  [ REF 5  ]   ,  the unit of the abscissa in Location Report is  0  .  5  meter  ,  so the ATP needs to convert its internal unit to match that .  The convertion shall be safety-oriented  ,  which means the envelope of the train location tend to be  " stretched "  to the both ends .  The rules of convertion are as following ARDL :
+In above ARDL  ,  the ABSCISSA_TO_HALF_METER means the coefficient of unit convertion . 
+ [ iTC_CC_ATP-SwRS- 0  4  0  9  ] 
+TrainTailCoupledStatus
+ATP shall send the coupled status of the inactive train cab to the ZC . 
+ [ iTC_CC_ATP-SwRS- 0  4  1  0  ] 
+LocationError
+ATP shall send the location error to the ZC .  According to  [ REF 5  ]   ,  the unit of the location error in Location Report is  0  .  5  meter  ,  so the ATP needs to convert its internal unit to match that .  The convertion shall be safety-oriented  ,  which means the location error tend to be  " overestimated "  . 
+ [ iTC_CC_ATP-SwRS- 0  0  6  8  ] 
+According to the status of RouteSetNotNeededSendable  ,  ATP can judge whether it is necessary to send RSNN information . 
+ [ iTC_CC_ATP-SwRS- 0  1  3  5  ] 
+NonVitalRouteSetNotNeeded
+Whether the CCNV request route set note needed . 
+ [ iTC_CC_ATP-SwRS- 0  4  1  4  ] 
+TrainRouteSetNotNeeded
+ATP shall send the route set not needed information to ZC . 
+ [ iTC_CC_ATP-SwRS- 0  4  1  5  ] 
+TrainCorrectDocking
+ATP shall send the docking correction information to the ZC . 
+ [ iTC_CC_ATP-SwRS- 0  4  1  6  ] 
+LocReportSpeed 
+ATP shall send the maximum train speed to the ZC .  According to  [ REF 5  ]   ,  the unit of the speed in Location Report is KPH  ,  so the ATP needs to convert its internal unit to match that .  The convertion shall be safety-oriented  ,  which means the speed tend to be  " overestimated "  . 
+ [ iTC_CC_ATP-SwRS- 0  4  1  7  ] 
+TrainMonitoringMode
+ATP shall send the current monitoring mode to the ZC . 
+ [ iTC_CC_ATP-SwRS- 0  5  9  9  ] 
+SignalOverrideSendable
+ [ iTC_CC_ATP-SwRS- 0  4  1  8  ] 
+SignalsOverride
+ATP shall send the signal override information to the ZC . 
+ [ iTC_CC_ATP-SwRS- 0  5  9  8  ] 
+ATCcontrolledTrain
+ 5  .  4  2  .  3  .  2  .  Track side time
+ [ iTC_CC_ATP-SwRS- 0  7  2  8  ] 
+DateSynchronizationReceived
+ [ iTC_CC_ATP-SwRS- 0  0  9  4  ] 
+DateSynchronisationReportAvailable used to judge whether the LC synchronization message could use or not .  When the below conditions fulfilled  ,  DateSynchronisationReportAvailable shall set as True .  Otherwise  ,  it set as False .    
+If ATP Receives the DateSynchronizationReport message from LC  ,  and the checksum is correct .  
+And If the received message is LC to respond the local CC  ,  ATP shall qualify with below conditions :
+The current ATP time is more than ccLoopHour in the message
+The different value between the current ATP time and the ccLoopHour  is less than the LC message time in the previous ATP . 
+Or else :  ,  If the received message is LC to respond the remote CC  ,  and it should be qualified with below conditions :
+The minimum time in remote ATP maintained by current ATP is more than the ccLoopHour
+The different value between maximum time in remote ATP maintained by current ATP and the ccLoopHour is less than the LC message time in the previous ATP . 
+ [ iTC_CC_ATP-SwRS- 0  0  9  5  ] 
+LastSynchronisationReportAge records the age from previous LC message to current cycle .  It used to compare whether the new received message is more updating than last recorded one  ,  to prevent the inverse transition in the network communication .   
+ [ iTC_CC_ATP-SwRS- 0  0  9  7  ] 
+LCsynchronisationLoopHourValid will check whether the LC message is still valid .  
+ [ iTC_CC_ATP-SwRS- 0  0  9  8  ] 
+ATP shall estimate a time called GroundTimeReference for trackside equipment  ( ZC  / LC )  .  From power-up  ,  GroundTimeReference shall consider invalid .  The rules for time information are as follows :
+When LC message invalid  ,  it is set as default value .  
+When ATP receives an available LC message  ,  it updates as the time of message .  
+Otherwise  ,  it updates the value according to the on board and track side cycle . 
+NOTES :
+In ATP shall not use GroundTimeReference during the calculation of the internal functions  ,  but only send the info to ZC .  
+ 5  .  4  2  .  3  .  3  .  Location Report sendable
+ [ iTC_CC_ATP-SwRS- 0  4  3  7  ] 
+EnableSendLocReport
+Before received the first valid synchronization from a LC  ,  the corresponding LC vital time shall consider not significant  ,  and the ATP shall prevent to send Location Report message to the ZC ( s )  associated to the corresponding LC . 
+ [ iTC_CC_ATP-SwRS- 0  4  3  8  ] 
+TimeElapseBetweenTwoLocReport  , 
+ATP shall calculate when to send the Location Report as the following ARDL :
+ [ iTC_CC_ATP-SwRS- 0  4  3  9  ] 
+ZCidUnderTrainTail  , 
+ATP shall record the ZC area id where the train tail located .  If the train is not localized  ,  ATP shall use the current receiving beacon where located  ,  or the last known ZC area id . 
+ [ iTC_CC_ATP-SwRS- 0  4  4  0  ] 
+ZCidUnderTrainHead  , 
+ATP shall record the ZC area id where the train head located .  If the train is not localized  ,  ATP shall use the current receiving beacon where located  ,  or the last known ZC area id . 
+ [ iTC_CC_ATP-SwRS- 0  4  4  1  ] 
+SendLocReportOnZCunderTrainTail  , 
+When the time elapsed from last report is equal to the Location Report sending cycle  ,  and the train tail located ZC is valid and not as same as the train head ZC  ,  and the ZC train tail located authorized by the LC  ,  ATP shall send the Location Report to this ZC where train tail located . 
+ [ iTC_CC_ATP-SwRS- 0  4  4  2  ] 
+SendLocReportOnZCunderTrainHead  , 
+When the time elapsed from last report is equal to the Location Report sending cycle  ,  and the train head located ZC is valid  ,  and the ZC train head located authorized by the LC  ,  ATP shall send the Location Report to this ZC where train head located . 
+ 5  .  4  2  .  4  . 	Outputs
+ 5  .  4  3  . 	F 7  3 -Outputs to CI Radio
+ 5  .  4  3  .  1  . 	Inputs
+ 5  .  4  3  .  2  . 	Locals
+ 5  .  4  3  .  3  . 	Processing
+ 5  .  4  3  .  3  .  1  . 	Receive CC variant request
+ [ iTC_CC_ATP-SwRS- 0  7  2  9  ] 
+CCvariantRequestMsgReceived
+ [ iTC_CC_ATP-SwRS- 0  7  3  0  ] 
+ReceivedCBIloopHour
+ 5  .  4  3  .  3  .  2  .  Send CC variant report
+
+ [ iTC_CC_ATP-SwRS- 0  7  3  1  ] 
+CCvariants  , 
+ATP shall check the following conditions when sending overlap release to CBI :
+Train front location is in overlap release zone  , 
+and the other ATP's overlap timer has expired  , 
+and ATP received variant request from CBI in this zone . 
+ 5  .  4  3  .  4  . 	Outputs
+ 5  .  4  4  . 	F 8 -Platform Relative & Assist Functions
+ 5  .  4  5  . 	F 8  1 -Initialize ATP software
+This function used to initialize the ATP software . 
+ 5  .  4  5  .  1  . 	Inputs
+ 5  .  4  5  .  2  . 	Processing
+ 5  .  4  5  .  2  .  1  . 	Read data plug
+ [ iTC_CC_ATP-SwRS- 0  5  1  1  ] 
+In Initialization  ,  ATP reads the CCdataPlugInfo with VCP coded from CC data plug  ,  and generates DataPlugContent with the structure shown as Table  4  4  . 
+ [ iTC_CC_ATP-SwRS- 0  0  3  7  ] 
+Through DataPlugContent . VLECpuId  ,  ATP recognizes whether it is located in CPU 1  or CPU 2   ,  and establish the communication between each other . 
+If the CPU id is wrong  ,  ATP shall stop and wait for reboot manually by the operator .  
+For CPU 1   ,  ATP shall control the LED to show WAITING_CPU when the communication establishing . 
+For CPU 1   ,  ATP shall control the LED to show ERR_CPU_ID when the cpuId is neither CPU 1  nor CPU 2  . 
+NOTES :
+Due to the limitation of hardware  ,  only the software running on CPU 1  can control the display of LED in the front panel of VLE- 2  board . 
+ 5  .  4  5  .  2  .  2  .  CCNV initialization
+ [ iTC_CC_ATP-SwRS- 0  0  5  6  ] 
+In initialization  ,  ATP needs to send some part of contents as shown in Table  4  7  from CC data plug to CCNV by dual-ports RAM after getting contact with CCNV .  If ATP cannot establish the communication with CCNV  ,  it will keep waiting and show in the LED as WAITING _CCNV  ,  until the communication is built or the operator reboots VLE- 2  board . 
+ 5  .  4  5  .  2  .  3  .  DLU initialization
+ [ iTC_CC_ATP-SwRS- 0  5  1  2  ] 
+In initialization  ,  ATP needs to send the DataPlugContent .  DLUIpBlue and DLUIpRed from CC data plug to DLU through RAM .   
+ 5  .  4  5  .  2  .  4  .  VPB initialization
+ [ iTC_CC_ATP-SwRS- 0  0  3  9  ] 
+The hardware needs to be initialized  ,  e . g .  VPB board .  If the initialization of hardware succeeds  ,  the system will continue .  Otherwise  ,  ATP on CPU 1  shall show the message in the LED as ERR_INIT_VPB  ,  and prohibit software executing and waiting for the system reboot by the operator .   
+ [ iTC_CC_ATP-SwRS- 0  5  9  1  ] 
+In initialization  ,  ATP in two CPU modules shall compare the values from VPB registers .  If these initial values are equal  ,  the ATP will continue ;  Otherwise  ,  ATP shall show the message in LED as UNCONST_VPB  ,  and prohibit software executing . 
+ 5  .  4  5  .  3  . 	Outputs
+ 5  .  4  6  . 	F 8  2 -Manage Vital Time
+ 5  .  4  6  .  1  . 	Inputs
+ 5  .  4  6  .  2  . 	Locals
+ 5  .  4  6  .  3  . 	Processing
+Both CPU modules of the VLE- 2  board have a safe clock respectively .  When the ATP software response the fixed-time interrupts  ,  it shall get the number of pulses and determine its correctness .  Furthermore  ,  the ATP software on two CPU shall synchronize their length of cycle  ,  and ensure the difference is not exceeding the time of one interrupt .  From the safety oriented  ,  the ATP cycle time length only can be overestimated but cannot be underestimated .  
+ 5  .  4  6  .  3  .  1  .  Immediate Task Count
+ [ iTC_CC_ATP-SwRS- 0  0  4  5  ] 
+VLEimpulseNb [ ATP_INTERRUPT_NB ]  array stores the safe clock impulse number for every interrupt triggered .  ATP shall obtain the impulse number through VLE_GetSafeTime  ,  and stores into the array .  
+ [ iTC_CC_ATP-SwRS- 0  7  5  6  ] 
+ImmediateCounter  ,  as the interrupt counter  ,  ATP shall accumulate  1  after each interrupt triggered . 
+ [ iTC_CC_ATP-SwRS- 0  0  4  6  ] 
+When the fixed-time interrupt triggered  ,  ATP shall update the ImmediateNb  , CycleSynchronized  ,  Trace  ,  Dt and CycleBiasNb .  
+If it is the first interrupt after powered up  ,  ATP shall set ImmediateNb as zero  , and initialize the Trace  ,  Dt  ( the dynamic time of VCP )   ,  and the middle variables m based on CPU . 
+Or else :  ,  If the ImmediateNb is zero  ,  but the VitalTime has not changed comparing to the previous interrupt  ,  then :
+Or else  ,  If ImmediateNb is zero  ,  and the VitalTime has changed comparing to the previous interrupt  ,  then :
+Otherwise  ,  set :
+and if the ImmediateNb is greater than  ( ATP_INTERRUPT_NB- 1  )   ,  then :
+NOTES：
+The numbers of data is classified by the VCP tool beforehand which includes : CPU 1 _TRACE_ 0   ,  CPU 2 _TRACE_ 0   ,  CPU 1 _TRACE_N  ,  CPU 2 _TRACE_N  ,  CPU 1 _DT_INIT  ,  CPU 2 _DT_INIT  ,  and Bi [ ATP_INTERRUPT_NB ]  .  and PDoperation (  )  represents the PD calculation without Dt；PDoperationDt (  )  stands for the PD calculation with Dt  ;  InversePDoperation (  )  is regarded as PD inverse calculation .  
+ 5  .  4  6  .  3  .  2  .  Deferred Task Control
+ [ iTC_CC_ATP-SwRS- 0  5  3  5  ] 
+The SafeTimerFailed defines whether the fix-time interrupt for hardware is correct or not .  ATP shall check whether the safe clock impulse number with the adjacent interrupt is within the error range  [ MIN_TIMER_IMPULSE_NB  ,  MAX_TIMER_IMPULSE_NB ]  . 
+Once the SafeTimerFailed was True  ,  ATP shall keep it as True unless the system is rebooted . 
+Or else :  ,  if the impulse number is within the above-mentioned range  ,  ATP shall set SafeTimerFailed as False
+Otherwise  ,  it will set SafeTimerFailed as True .  
+ [ iTC_CC_ATP-SwRS- 0  0  4  7  ] 
+The VitalTime stand for the current cycle of ATP deferred task .  After power up  ,  it starts from zero and increase one each cycle .  When all the work is executed in the main task  ,  ATP detects whether the interrupt task is over  ,  i . e .  the difference between ImmediateCounter and LockedImmediateCounter is equal to or larger than  ( ATP_INTERRUPT_NB - 1  )  .  
+If it is so  ,  it shows that the main task in this cycle finishes .  Then ATP shall :
+send the VitalTime to the other CPU  , 
+and send Trace and Dt to VIOM to check  , 
+and at the end of this cycle  ,  set
+Otherwise  ,  keep waiting . 
+ [ iTC_CC_ATP-SwRS- 0  0  4  8  ] 
+ATP executes the new cycle DeferredTask when below conditions fulfilled :
+CycleSynchronized is True  , 
+and the TOC_VitalTime get from the other CPU is equal to VitalTime  ,  representing that the other CPU finished to execute the task in the previous cycle .  
+If above condition does not fulfill  ,  ATP shall prohibit to execute  ,  and CPU 1  shows the message ERR_SYNCH in the LED of VLE board .  
+NOTES : 
+As shown in Figure  5  2  3   ,  this is the demonstration of the process for cycle synchronization between two CPU modules .  In cycle N  ,  if the clock of CPU 1  was faster than CPU 2   ,  then the interrupt counter of CPU 1  counts to ATP_INTERRUPT_NB and sends the CPU 1 _VitalTime ( N )  information to CPU 2  .  However  ,  at this moment the interrupt counter of CPU 2  still do not achieve the new cycle  ,  so both of the CPU module cannot enter into cycle ( N+ 1  )  .  Only when the CPU 2  has get all interrupt finished signal  ,  then sends the VitalTime ( N )  to CPU 1   ,  and the both CPUs are enter the cycle ( N+ 1  )  together .  During this process  ,  CPU 1  has ignored one interrupt period to wait the CPU 2  . 
+This kind of  " waiting "  synchronous way will avoid the danger that the clock is getting faster and faster .  That is to say  ,  we may use the measured movement in the period  ( ATP_CYCLE_TIME + ATP_INTERRUPT_TIME )  divide a fixed ATP_CYCLE_TIME  ,  then we can get speed which is higher than the actual value  ,  meaning that we over-evaluate the train speed so as to ensure the safety .  
+The cycle error between CPU 1  and CPU 2  cannot exceed one ATP_INTERRUPT_TIME .  If it exceeded this period  ,  the CycleSynchronized shall be set as False  ,  and the ATP will not execute continuously so that the VIOM will cut off the output to the train .  
+ [ iTC_CC_ATP-SwRS- 0  5  8  9  ] 
+ 5  .  4  6  .  3  .  3  .  RTC time
+ [ iTC_CC_ATP-SwRS- 0  4  4  6  ] 
+ATP software shall maintain the RTC time for non-vital functions . 
+In initialization  ,  ATP software get RTC time from VLE- 2  board ; 
+And then  ,  ATP software updates the RTC time every second ; 
+And if the difference between RTC time ATP used and the NTP time CCNV sent is greater than MAX_NTP_TIME_ERROR  ,  ATP shall reset the RTC time as NTP time . 
+The Time . Update (  )  means ATP software shall update the RTC time every second . 
+ 5  .  4  6  .  4  . 	Outputs 
+ 5  .  4  7  . 	F 8  3 -Manage Synchronization between two CPUs
+ 5  .  4  7  .  1  . 	Inputs
+ 5  .  4  7  .  2  . 	Processing
+Refer to Figure  5  2  4   ,  the two set of ATP software in the same VLE- 2  board will calculate the output results to VIOM  ,  redundant ATP  ,  ZC or LC  ,  and those data will exchanged by DPRAM .  Then the output will merge into one pack of data and send to CCNV .  
+ [ iTC_CC_ATP-SwRS- 0  0  5  0  ] 
+In every cycle  ,  ATP combines the vital outputs generated by itself and from the other CPU into one frame and sends it to CCNV  ,  who will transmit the frame to VIOM .  ATP will send VIOM 1 VitalOut and VIOM 2 VitalOut to the other CPU through dual-ports RAM  ,  and receive the TOC_VIOM 1 VitalOut and TOC_VIOM 2 VitalOut from the other CPU . 
+ [ iTC_CC_ATP-SwRS- 0  0  5  1  ] 
+Based on ST_VIOM_OUT structure  ,  ATP combines VIOM 1 VitalOut and TOC_VIOM 1 VitalOut as IdenticalVIOM 1 Out  ,  while based on the same structure ST_VIOM_OUT  ,  ATP combines VIOM 2 VitalOut and TOC_VIOM 2 VitalOut as IdenticalVIOM 2 Out . 
+ [ iTC_CC_ATP-SwRS- 0  5  7  9  ] 
+IdenticalLocReport  ,  the location report after merging two CPU’s results .  When the two CPUs complete LocReport calculation  ,  need to send each other through the dual-port RAM ;  and receive the TOC_LocReport from the other .  ATP shall combine the two reports as an IdenticalLocReport  ,  according to the following rules :
+The variables without vital checksums in ST_LOC_REPORT  ,  shall use the values calculated by itself . 
+For the VitalChecksum_ 1   ,  ATP shall calculate using the values from CPU 1  . 
+For the VitalChecksum_ 2   ,  ATP shall calculate using the values from CPU 2  . 
+NOTES :
+Normally  ,  the calculated results between CPU 1  and CPU 2  should be the same – if not  ,  the receiver will get the wrong checksum calculation and thus reject the message .  However  ,  due to the independent interrupts of two CPUs  ,  the moment ATP software reading the odometer information from VPB’s registers is not simultaneous  ,  which lead to unavoidable biases in movement or speed calculation by the two ATP software .  Therefore  ,  ATP need to synchronize the VPB inputs  ( SwRS- 0  5  9  0  )  and then calculate with IdenticalLockedOdometer .  
+ [ iTC_CC_ATP-SwRS- 0  5  8  0  ] 
+IdenticalVersionReport  ,  the version report after merging two CPU’s results .  When the two CPUs complete VersionFromCCreport calculation  ,  need to send each other through the dual-port RAM ;  and receive the TOC_VersionReport from the other .  ATP shall combine the two reports as an IdenticalVersionReport  ,  according to the following rules :
+The variables without vital checksums in ST_VERSION_REPORT  ,  shall use the values calculated by itself . 
+For the VitalChecksum_ 1   ,  ATP shall calculate using the values from CPU 1  . 
+For the VitalChecksum_ 2   ,  ATP shall calculate using the values from CPU 2  . 
+ [ iTC_CC_ATP-SwRS- 0  5  8  1  ] 
+IdenticalCCsyncReport  ,  the redundant ATP report after merging two CPU’s results .  When the two CPUs complete CCsynchroReport calculation  ,  need to send each other through the dual-port RAM ;  and receive the TOC_CCsyncReport from the other .  ATP shall combine the two reports as an IdenticalCCsyncReport  ,  according to the following rules :
+The variables without vital checksums in ST_SYNCHRO_REPORT  ,  shall use the values calculated by itself . 
+For the VitalChecksum_ 1   ,  ATP shall calculate using the values from CPU 1  . 
+For the VitalChecksum_ 2   ,  ATP shall calculate using the values from CPU 2  . 
+ [ iTC_CC_ATP-SwRS- 0  5  8  8  ] 
+IdenticalCIsetting  ,  the PSD control message after merging two CPU’s results .  When the two CPUs complete CIsetting calculation  ,  need to send each other through the dual-port RAM ;  and receive the TOC_CIsetting from the other .  ATP shall combine the two reports as an IdenticalCIsetting  ,  according to the following rules :
+The variables in ST_CI_SETTING  ,  shall use the values calculated by itself . 
+For the checkword  1  in FSFB 2  protocol  ,  ATP shall calculate using the values from CPU 1  . 
+For the checkword  2  in FSFB 2  protocol  ,  ATP shall calculate using the values from CPU 2  . 
+ [ iTC_CC_ATP-SwRS- 0  7  4  6  ] 
+IdenticalCBIvariantRequest  ,  the CBI variants request after merging two CPU’s results .  When the two CPUs complete CBIvariantRequestcalculation  ,  need to send each other through the dual-port RAM ;  and receive the TOC_CCvariantReport from the other .  ATP shall combine the two reports as an IdenticalCBIvariantRequest  ,  according to the following rules :
+The variables without vital checksums  ,  shall use the values calculated by itself . 
+For the VitalChecksum_ 1   ,  ATP shall calculate using the values from CPU 1  . 
+For the VitalChecksum_ 2   ,  ATP shall calculate using the values from CPU 2  . 
+ [ iTC_CC_ATP-SwRS- 0  7  4  7  ] 
+IdenticalCCvariantReport  ,  the CC overlap releasable report after merging two CPU’s results .  When the two CPUs complete CCvariantReportcalculation  ,  need to send each other through the dual-port RAM ;  and receive the TOC_CCvariantReport from the other .  ATP shall combine the two reports as an IdenticalCCvariantReport  ,  according to the following rules :
+The variables without vital checksums  ,  shall use the values calculated by itself . 
+For the VitalChecksum_ 1   ,  ATP shall calculate using the values from CPU 1  . 
+For the VitalChecksum_ 2   ,  ATP shall calculate using the values from CPU 2  . 
+ 5  .  4  7  .  3  . 	Outputs
+ 6  . 	APPENDICES
+ 6  .  1  . 	Project Configuration of ATPsetting
+The project configurable vital settings are shown in Table  6  1  . 
+ 6  .  2  . 	Carborne Controller Constants
+Table  6  2  shows the constants used by ATP software  ,  which are commonly used for all iTC projects . 
+ 6  .  3  . 	Logical Types Definition
+This part defines variables and structures types used in the description of ATP software requirements . 
+ 6  .  3  .  1  .  Fundamental types
+ 6  .  3  .  2  .  Enumerated types
+ 6  .  3  .  3  .  Aggregated types
+ 6  .  4  .  Offline generated codes
+ 6  .  5  .  Message
+Message . Exists  ,  ATP shall determine whether receive a correct message from CCNV . 
+Message . VitalChecksumValid  , When ATP received a safety message  ,  shall check the CRC and calculate the check words of the message .  If either the CRC or the vital checkword failed  ,  ATP shall discard the message and return False ;  Otherwise  ,  ATP shall consider the message is correct and return True . 
+Message .  ReplyLocalCC  , Message .  ReplyDistantCC  , Message .  ModularSub  , Message . IsMoreRecent
+NOTES：ATP_MESSAGE_MAX_DELAY is a constant for the modular subtraction  ,  which shall set as big enough and much less than the MAX_ATP_LOOP_HOUR .  There is an assumption that ATP do not need to consider the difference between two loop hour is more than or equal to ATP_MESSAGE_MAX_DELAY  ,  when calculate the modular minus . 
+Message . Received  , Message . Available  , Message . LastAge  , Message .  Valid
+ 6  .  6  . 	Track Map
+ 6  .  6  .  1  . 	Block related
+TrackMap . Blocks  , TrackMap . BlockOrigin  , TrackMap . NextBlock
+ 6  .  6  .  2  . 	Singularity related
+TrackMap . AllSingsBtwTwoLocs  , TrackMap . AllSingsInZone  , TrackMap .  AllSwitchesInZone  , TrackMap . ExistSingBtwTwoLocs  , TrackMap . ExistSingularityInZone  , TrackMap . ExistSingularityInReverseZone  ,  
+TrackMap . ExistSwitchBtwTwoLocs  ,  TrackMap . ExistThePole  , TrackMap . ExistZoneLocationIncluded
+ 6  .  6  .  3  . Beacon related
+TrackMap . AreNeighbouredBeacons  , TrackMap . Beacons  , TrackMap . BeaconBelongsToCalibrationCouple  , TrackMap . BmBeaconDirection  , TrackMap . CalibrationCoupleMaxDistance  , 
+TrackMap . CalibrationCoupleMinDistance  , 
+TrackMap . IsBmBeacon  , TrackMap . IsCalibrationValidationBeacon  , TrackMap . OrientationOfNeighbouredBeacons  , 
+ 6  .  6  .  4  . CBI related
+TrackMap . CbiId  , TrackMap . NumberOfVariants  , 
+ 6  .  6  .  5  . ZC related
+TrackMap . ZC  , TrackMap . ZCId
+ 6  .  6  .  6  . Location relationship
+TrackMap . CalculateZoneBorder  , TrackMap . DistanceBtwTwoLocs  , TrackMap . IntersectionOfTwoZones  , TrackMap . LocationBtwTwoLocs  , TrackMap . LocationInZone  , TrackMap . LocationUpdateExt 2   , TrackMap . OppositeOrientation  , TrackMap . ReachableBetweenTwoLocations  , 
+ 6  .  7  . 	Assessment on Compliance with EN 5  0  1  2  8 
+Compliance of software development with techniques and measures recommended by CENELEC standard EN  5  0  1  2  8  (  2  0  0  1  )  is established through correspondence with tables of EN 5  0  1  2  8  (  2  0  0  1  )  Annex A . 
+
+The names of the tables  ,  the references and the conventions are those of the CENELEC standard .  A selection of techniques and measure for software development in CC subsystem is given as the following choices :
+√’ – means this technique or measure has been applied . 
+‘-’ – means this technique or measure has not been chosen . 
+‘NA’ – means this technique or measure is not applicable . 
+
+

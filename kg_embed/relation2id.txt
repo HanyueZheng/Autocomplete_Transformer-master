@@ -1,0 +1,12 @@
+11
+Part-of	0
+Used-for	1
+Parallel	2
+Attribute-of	3
+Source-of	4
+Criteria-of	5
+Coreference	6
+Value-of	7
+Less-than	8
+Not-exceed	9
+More-than	10

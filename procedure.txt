@@ -1,0 +1,6 @@
+step:0 
+step:0 
+step:0 
+step:0 
+train  Loss: 5.791176 Tokens per Sec: 0.952520 
+test   Loss: 6.268217 Tokens per Sec: 1.154764 
