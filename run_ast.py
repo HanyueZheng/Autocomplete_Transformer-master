@@ -2,15 +2,18 @@ import torch
 import sys
 import seaborn
 import json
+import numpy as np
 from torch.autograd import Variable
 from VocabularyLoader import VocabularyLoader_token, VocabularyLoader_ast
 from Batch import Batch, Batch_kg, Batch_ast
 from Optim import NoamOpt, LabelSmoothing
 from Model import make_model, make_model_kg, make_model_ast
-from Train import run_epoch, greedy_decode, beam_search_decode, SimpleLossCompute, run_epoch_kg, run_epoch_ast, beam_search_decode_kg
+import Model
+from Train import run_epoch, greedy_decode, beam_search_decode, SimpleLossCompute, run_epoch_kg, run_epoch_ast, beam_search_decode_kg, beam_search_decode_ast
 from Dataloader import DataLoader_char, DataLoader_token, DataLoader_token_kg, DataLoader_token_ast
 from HyperParameter import chunk_len, batch, nbatches, transformer_size, epoch_number, epoches_of_loss_record, \
     predict_length
+
 
 
 seaborn.set_context(context="talk")
@@ -231,9 +234,10 @@ if __name__ == "__main__":
 
     elif method == "inference":
         filename = sys.argv[2]
+        ast_file = sys.argv[4]
         is_char_level = sys.argv[3] == 'char'
-        trained_model_name = sys.argv[4]
-        words = sys.argv[5]
+        trained_model_name = sys.argv[5]
+        words = sys.argv[6]
 
         if is_char_level:
             model = torch.load(trained_model_name).cuda()
@@ -251,8 +255,14 @@ if __name__ == "__main__":
             model = torch.load(trained_model_name).cuda()
             model.eval()
             dataloader = DataLoader_token_kg(filename, ents, chunk_len, device)
+
+            vloader_ast = VocabularyLoader_ast(filename, ast_file, device)
+            ast_token_num = vloader_ast.n_chars_ast
+            dataloader_ast = DataLoader_token_ast(filename, ents, chunk_len, device, ast_file, ast_token_num)
+
             word_list = words.replace('\n', ' ').replace('\t', ' ').split(' ')
             word_list = [i for i in word_list if (len(str(i))) != 0]
+
             src = Variable(dataloader.vocabularyLoader.token_tensor(word_list).unsqueeze(0))
             src_mask = Variable((src != 0).unsqueeze(-2))
             ent = Variable(torch.Tensor([24]*len(word_list)).long()).to(device)
@@ -268,12 +278,56 @@ if __name__ == "__main__":
 
             ent_mask = None
 
-            output_embed_list = beam_search_decode_kg(model, src, src_mask, ent, ent_mask, max_len=predict_length)
+            ast = Variable(torch.Tensor([0] * ast_token_num).long()).to(device)
+            ast_list = []
+            for i in ast_token_num:
+                if words.find(" " + vloader_ast.index2char[i] + " ") != -1:
+                    ast_list.append(vloader_ast.index2char[i])
+            for i in range(len(ast_list)):
+                key = ast_list[i]
+                if word_list.index(key) >= 0:
+                    ast[word_list.index(key)] = vloader_ast.node_table[key]
+            ast = ast.unsqueeze(0)
+            # path_addlist = [0] * ast_token_num
+            #
+            # keylist = []
+            # start = 0
+            # while words.find("[", start) > 0:
+            #     start = words.find("[ iTC", start)
+            #     if words.find("]", start) > 0:
+            #         end = words.find("]", start)
+            #         # print("end:" + str(end))
+            #         key = words[start: end + 1]
+            #         key = key.replace(" ", "") + "\n"
+            #         if key != "" and key in path_encodedic.keys():
+            #             keylist.append(key)
+            #         start = end
+            #     else:
+            #         start = len(words) - 1
+            # for k in keylist:
+            #     ast_list = path_encodedic[k]
+            #
+            #     for t in ast_list:
+            #         # t.resize(t.size(), path_tensor.size())
+            #         # print(t.size())
+            #         #                trans = nn.Embedding(t.size(), self.ast_token_num - 1)
+            #
+            #         path_addlist = np.sum([t, path_addlist], axis=0)
+            #
+            # ast = torch.Tensor(path_addlist).long()
+
+
+
+            # output_embed_list = beam_search_decode_kg(model, src, src_mask, ent, ent_mask, max_len=predict_length)
+            lstm = Model.LSTM(ast_token_num, 99, 99)
+            hidden = lstm.init_hidden().to(device)
+            cell_state = lstm.init_cell_state().to(device)
+            output_embed_list = beam_search_decode_ast(model, src, src_mask, ent, ent_mask, ast, hidden, cell_state, max_len=predict_length)
             for j in range(len(output_embed_list)):
                 output_embed = output_embed_list[j][1][0].cpu().numpy()
                 result = []
                 for i in output_embed:
-                    result.append(dataloader.vocabularyLoader.index2token[i])
+                    result.append(dataloader_ast.vocabularyLoader.index2token[i])
                 result = result[1:]
                 result = " ".join(result)
                 print(result)

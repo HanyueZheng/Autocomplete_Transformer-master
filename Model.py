@@ -303,97 +303,97 @@ class EncoderDecoder4AST(nn.Module):
         return self.decoder(self.tgt_embed(tgt), memory, src_mask, tgt_mask)
 
 
-class BiLSTM(nn.Module):
-    # 用于编码ast
-    def __init__(self, voc_size, embedding_dim, hidden_size, device):
-        super(BiLSTM, self).__init__()
-        self.voc_size = voc_size
-        self.hidden_size = hidden_size
-        self.embedding_dim = embedding_dim
-        self.device = device
-
-        self.embedding = nn.Embedding(voc_size, embedding_dim)
-
-        # forget gate
-        self.wf = nn.Linear(embedding_dim, hidden_size, bias=False)
-        self.uf = nn.Linear(hidden_size, hidden_size, bias=True)
-
-        # forget gate back
-        self.wfb = nn.Linear(embedding_dim, hidden_size, bias=False)
-        self.ufb = nn.Linear(hidden_size, hidden_size, bias=False)
-
-        # input gate
-        self.wi = nn.Linear(embedding_dim, hidden_size, bias=False)
-        self.ui = nn.Linear(hidden_size, hidden_size, bias=True)
-
-        # input gate back
-        self.wib = nn.Linear(embedding_dim, hidden_size, bias=False)
-        self.uib = nn.Linear(hidden_size, hidden_size, bias=True)
-
-        # ouput gate
-        self.wo = nn.Linear(embedding_dim, hidden_size, bias=False)
-        self.uo = nn.Linear(hidden_size, hidden_size, bias=True)
-
-        # output gate back
-        self.wob = nn.Linear(embedding_dim, hidden_size, bias=False)
-        self.uob = nn.Linear(hidden_size, hidden_size, bias=True)
-
-        # for updating cell state vector
-        self.wc = nn.Linear(embedding_dim, hidden_size, bias=False)
-        self.uc = nn.Linear(hidden_size, hidden_size, bias=True)
-
-        # update cell back
-        self.wcb = nn.Linear(embedding_dim, hidden_size, bias=False)
-        self.ucb = nn.Linear(hidden_size, hidden_size, bias=True)
-
-        # gate's activation function
-        self.sigmoid = nn.Sigmoid()
-
-        # activation function on the updated cell state
-        self.tanh = nn.Tanh()
-
-        # distribution of the prediction
-        self.out = nn.Linear(hidden_size * 2, voc_size)
-        self.softmax = nn.LogSoftmax(dim=0)
-
-    def forward(self, input, input_b, hidden, cell_state, cell_state_b):
-        embed_input = self.embedding(input)
-        embed_input_b = self.embedding(input_b)
-
-        hidden_l = torch.chunk(hidden, 2, dim=-1)[0]
-        hidden_b = torch.chunk(hidden, 2, dim=-1)[1]
-        # @ hidden_b = torch.chunk(hidden, 2, dim = 1)[1]
-        # print(hidden_b)
-        # forget gate's activation vector
-        f = self.sigmoid(self.wf(embed_input) + self.uf(hidden_l))
-        f_b = self.sigmoid(self.wf(embed_input_b) + self.uf(hidden_b))
-
-        # input gate's activation vector
-        i = self.sigmoid(self.wi(embed_input) + self.ui(hidden_l))
-        c_hat = self.tanh(self.wc(embed_input) + self.uc(hidden_l))
-
-        i_b = self.sigmoid(self.wib(embed_input_b) + self.uib(hidden_b))
-        c_hat_b = self.tanh(self.wc(embed_input_b) + self.uc(hidden_b))
-
-        updated_cell_state = torch.mul(cell_state, f) + torch.mul(i, c_hat)
-        updated_cell_state_b = torch.mul(cell_state_b, f_b) + torch.mul(i_b, c_hat_b)
-
-        # output gate's activation vector
-        o = self.sigmoid(self.wo(embed_input) + self.uo(hidden_l))
-        updated_hidden = torch.mul(self.tanh(updated_cell_state), o)
-
-        o_b = self.sigmoid(self.wob(embed_input_b) + self.uob(hidden_b))
-        updated_hidden_b = torch.mul(self.tanh(updated_cell_state_b), o_b)
-
-        hiddenout = torch.cat([updated_hidden, updated_hidden_b], dim=-1)
-        output = self.softmax(self.out(hiddenout))
-        return output, hiddenout, updated_cell_state, updated_cell_state_b
-
-    def init_hidden(self):
-        return Variable(torch.zeros(self.hidden_size * 2))
-
-    def init_cell_state(self):
-        return Variable(torch.zeros(self.hidden_size))
+# class BiLSTM(nn.Module):
+#     # 用于编码ast
+#     def __init__(self, voc_size, embedding_dim, hidden_size, device):
+#         super(BiLSTM, self).__init__()
+#         self.voc_size = voc_size
+#         self.hidden_size = hidden_size
+#         self.embedding_dim = embedding_dim
+#         self.device = device
+#
+#         self.embedding = nn.Embedding(voc_size, embedding_dim)
+#
+#         # forget gate
+#         self.wf = nn.Linear(embedding_dim, hidden_size, bias=False)
+#         self.uf = nn.Linear(hidden_size, hidden_size, bias=True)
+#
+#         # forget gate back
+#         self.wfb = nn.Linear(embedding_dim, hidden_size, bias=False)
+#         self.ufb = nn.Linear(hidden_size, hidden_size, bias=False)
+#
+#         # input gate
+#         self.wi = nn.Linear(embedding_dim, hidden_size, bias=False)
+#         self.ui = nn.Linear(hidden_size, hidden_size, bias=True)
+#
+#         # input gate back
+#         self.wib = nn.Linear(embedding_dim, hidden_size, bias=False)
+#         self.uib = nn.Linear(hidden_size, hidden_size, bias=True)
+#
+#         # ouput gate
+#         self.wo = nn.Linear(embedding_dim, hidden_size, bias=False)
+#         self.uo = nn.Linear(hidden_size, hidden_size, bias=True)
+#
+#         # output gate back
+#         self.wob = nn.Linear(embedding_dim, hidden_size, bias=False)
+#         self.uob = nn.Linear(hidden_size, hidden_size, bias=True)
+#
+#         # for updating cell state vector
+#         self.wc = nn.Linear(embedding_dim, hidden_size, bias=False)
+#         self.uc = nn.Linear(hidden_size, hidden_size, bias=True)
+#
+#         # update cell back
+#         self.wcb = nn.Linear(embedding_dim, hidden_size, bias=False)
+#         self.ucb = nn.Linear(hidden_size, hidden_size, bias=True)
+#
+#         # gate's activation function
+#         self.sigmoid = nn.Sigmoid()
+#
+#         # activation function on the updated cell state
+#         self.tanh = nn.Tanh()
+#
+#         # distribution of the prediction
+#         self.out = nn.Linear(hidden_size * 2, voc_size)
+#         self.softmax = nn.LogSoftmax(dim=0)
+#
+#     def forward(self, input, input_b, hidden, cell_state, cell_state_b):
+#         embed_input = self.embedding(input)
+#         embed_input_b = self.embedding(input_b)
+#
+#         hidden_l = torch.chunk(hidden, 2, dim=-1)[0]
+#         hidden_b = torch.chunk(hidden, 2, dim=-1)[1]
+#         # @ hidden_b = torch.chunk(hidden, 2, dim = 1)[1]
+#         # print(hidden_b)
+#         # forget gate's activation vector
+#         f = self.sigmoid(self.wf(embed_input) + self.uf(hidden_l))
+#         f_b = self.sigmoid(self.wf(embed_input_b) + self.uf(hidden_b))
+#
+#         # input gate's activation vector
+#         i = self.sigmoid(self.wi(embed_input) + self.ui(hidden_l))
+#         c_hat = self.tanh(self.wc(embed_input) + self.uc(hidden_l))
+#
+#         i_b = self.sigmoid(self.wib(embed_input_b) + self.uib(hidden_b))
+#         c_hat_b = self.tanh(self.wc(embed_input_b) + self.uc(hidden_b))
+#
+#         updated_cell_state = torch.mul(cell_state, f) + torch.mul(i, c_hat)
+#         updated_cell_state_b = torch.mul(cell_state_b, f_b) + torch.mul(i_b, c_hat_b)
+#
+#         # output gate's activation vector
+#         o = self.sigmoid(self.wo(embed_input) + self.uo(hidden_l))
+#         updated_hidden = torch.mul(self.tanh(updated_cell_state), o)
+#
+#         o_b = self.sigmoid(self.wob(embed_input_b) + self.uob(hidden_b))
+#         updated_hidden_b = torch.mul(self.tanh(updated_cell_state_b), o_b)
+#
+#         hiddenout = torch.cat([updated_hidden, updated_hidden_b], dim=-1)
+#         output = self.softmax(self.out(hiddenout))
+#         return output, hiddenout, updated_cell_state, updated_cell_state_b
+#
+#     def init_hidden(self):
+#         return Variable(torch.zeros(self.hidden_size * 2))
+#
+#     def init_cell_state(self):
+#         return Variable(torch.zeros(self.hidden_size))
 
 
 class LSTM(nn.Module):

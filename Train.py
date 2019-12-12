@@ -68,7 +68,7 @@ def greedy_decode(model, src, src_mask, max_len):
     memory = model.encode(src, src_mask)
     ys = torch.ones(1, 1).fill_(src[0][-1].cpu().numpy().item()).type_as(src.data)
     for i in range(max_len):
-        out = model.decode(memory, src_mask,Variable(ys),Variable(subsequent_mask(ys.size(1)).type_as(src.data)))
+        out = model.decode(memory, src_mask,Variable(ys),Variable(Model.Decoder.subsequent_mask(ys.size(1)).type_as(src.data)))
         prob = model.generator(out[:, -1])
         _, next_word = torch.max(prob, dim=1)
         next_word = next_word.data[0]
@@ -91,7 +91,7 @@ def beam_search_decode(model, src, src_mask, max_len):
 
 
 def choose_options(model,memory,src,src_mask,ys):
-    out = model.decode(memory, src_mask, Variable(ys[1]), Variable(subsequent_mask(ys[1].size(1)).type_as(src.data)))
+    out = model.decode(memory, src_mask, Variable(ys[1]), Variable(Model.Decoder.subsequent_mask(ys[1].size(1)).type_as(src.data)))
     prob = model.generator(out[:, -1])
     dict = {}
     for j in range(prob.size()[-1]):
@@ -175,5 +175,17 @@ def beam_search_decode_kg(model, src, src_mask, ent, ent_mask, max_len):
         for j in range(len(reserved_options)):
             tmp_options += choose_options(model, memory, src, src_mask, reserved_options[j])
         tmp_options = sorted(tmp_options,reverse=True)[:beam_search_number]
+        reserved_options = tmp_options
+    return reserved_options
+
+def beam_search_decode_ast(model, src, src_mask, ent, ent_mask, ast, hidden, cell_state, max_len):
+    memory = model.encode(src, src_mask, ent, ent_mask, ast, hidden, cell_state)
+    ys = [0, torch.ones(1, 1).fill_(src[0][-1].cpu().numpy().item()).type_as(src.data)]
+    reserved_options = choose_options(model, memory, src, src_mask, ys)
+    for i in range(max_len - 1):
+        tmp_options = []
+        for j in range(len(reserved_options)):
+            tmp_options += choose_options(model, memory, src, src_mask, reserved_options[j])
+        tmp_options = sorted(tmp_options, reverse=True)[:beam_search_number]
         reserved_options = tmp_options
     return reserved_options
