@@ -129,16 +129,41 @@ def run_epoch_kg(stage, data_iter, model, loss_compute, nbatches, epoch=0):
     if epoch%epoches_of_model_save==0:
         torch.save(model, "transformer" + "{}".format(epoch) + ".model")
 
-def run_epoch_ast(stage, data_iter, model, loss_compute, nbatches, device, ast_token_num, epoch=0):
+def run_epoch_newast(stage, data_iter, model, loss_compute, nbatches, epoch=0):
+    "Standard Training and Logging Function"
+    start = time.time()
+    total_tokens = 0
+    total_loss = 0
+    tokens = 0
+    for i, batch in enumerate(data_iter):
+        out = model.forward(batch.src, batch.ent, batch.trg, batch.src_mask, batch.ent_mask, batch.trg_mask, batch.ast, batch.ast_mask)
+        loss = loss_compute(out, batch.trg_y, batch.ntokens)
+
+        total_loss += loss.detach().cpu().numpy()
+        total_tokens += batch.ntokens.cpu().numpy()
+        tokens += batch.ntokens.cpu().numpy()
+        if i == nbatches-1:
+            elapsed = time.time() - start
+            print("%s  Loss: %f Tokens per Sec: %f" % (stage, loss.detach().cpu().numpy() / batch.ntokens.cpu().numpy(), tokens / elapsed))
+            if epoch%epoches_of_loss_record==0:
+                f = open("procedure.txt", "a+")
+                f.write("%s  Loss: %f Tokens per Sec: %f \n" % (stage, loss.detach().cpu().numpy() / batch.ntokens.cpu().numpy(), tokens / elapsed))
+                f.close()
+            start = time.time()
+            tokens = 0
+    if epoch%epoches_of_model_save==0:
+        torch.save(model, "transformer" + "{}".format(epoch) + ".model")
+
+def run_epoch_ast(stage, data_iter, model, loss_compute, nbatches, device, ast_token_num, embedding_dim=512, hidden_size=512, epoch=0):
     "Standard Training and Logging Function"
     start = time.time()
     total_tokens = 0
     total_loss = 0
     tokens = 0
     print("run_epoch_ast")
-    lstm = Model.LSTM(ast_token_num ,99, 99)
-    hidden = lstm.init_hidden().to(device)
-    cell_state = lstm.init_cell_state().to(device)
+    lstm = Model.LSTM(ast_token_num ,embedding_dim, hidden_size)
+    hidden = lstm.init_hidden(nbatches, device)
+    #cell_state = lstm.init_cell_state().to(device)
     #cell_state_b = lstm.init_cell_state().to(device)
 
     for i, batch in enumerate(data_iter):
@@ -146,7 +171,7 @@ def run_epoch_ast(stage, data_iter, model, loss_compute, nbatches, device, ast_t
         #print(batch.ent.size())
         # print(batch.trg.size())
         # print(batch.ast.size())
-        out = model.forward(batch.src, batch.ent, batch.trg, batch.src_mask, batch.ent_mask, batch.trg_mask, batch.ast, hidden, cell_state)
+        out = model.forward(batch.src, batch.ent, batch.trg, batch.src_mask, batch.ent_mask, batch.trg_mask, batch.ast, hidden)
         print("forward down")
         loss = loss_compute(out, batch.trg_y, batch.ntokens)
 
@@ -179,6 +204,9 @@ def beam_search_decode_kg(model, src, src_mask, ent, ent_mask, max_len):
     return reserved_options
 
 def beam_search_decode_ast(model, src, src_mask, ent, ent_mask, ast, hidden, cell_state, max_len):
+    src.size()
+    ent.size()
+    ast.size()
     memory = model.encode(src, src_mask, ent, ent_mask, ast, hidden, cell_state)
     ys = [0, torch.ones(1, 1).fill_(src[0][-1].cpu().numpy().item()).type_as(src.data)]
     reserved_options = choose_options(model, memory, src, src_mask, ys)

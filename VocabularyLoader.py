@@ -3,6 +3,8 @@ from torch.autograd import Variable
 import json
 import pdb
 import numpy as np
+from gensim.models import word2vec
+from gensim.models import fasttext
 
 
 class VocabularyLoader_char():
@@ -133,3 +135,67 @@ class VocabularyLoader_ast():
             except Exception as e:
                 pdb.set_trace()
         return Variable(tensor).to(self.device)
+
+class VocabularyLoader_newast():
+    def __init__(self, filename, ast_newfile, astdim, device):
+        self.newastnode_table = {}
+        self.index2newast = {}
+        self.n_token_newast = 0
+        self.device = device
+        self.ast_file = ast_newfile
+        self.astdim = astdim
+
+        self.token_table = {}
+        self.index2token = {}
+        self.n_tokens = 0
+
+        with open(ast_newfile, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                line = line.split()
+                for w in line:
+                    if w not in self.newastnode_table:
+                        self.newastnode_table[w] = self.n_token_newast
+                        self.index2newast[self.n_token_newast] = w
+                        self.n_token_newast += 1
+                        # print(self.n_chars)
+
+        f = open(filename, 'r', encoding='UTF-8')
+        for lines in f:
+            ls = lines.replace('\n', ' ').replace('\t', ' ')
+            token_lists = ls.split(' ')
+            token_lists = [i for i in token_lists if (len(str(i))) != 0]
+            for i in token_lists:
+                if i is not '':
+                    if i not in self.token_table:
+                        self.token_table[i] = self.n_tokens
+                        self.index2token[self.n_tokens] = i
+                        self.n_tokens += 1
+        self.token_table['UNKNOWN'] = self.n_tokens
+        self.index2token[self.n_tokens] = 'UNKNOWN'
+        self.n_tokens += 1
+
+    def token_tensor(self, tokens):
+        tensor = torch.zeros(len(tokens)).long()
+        for c in range(len(tokens)):
+            try:
+                tensor[c] = self.token_table[tokens[c]]
+            except Exception as e:
+                pdb.set_trace()
+        return Variable(tensor).to(self.device)
+
+    def word2vec(self):
+        sentences = word2vec.LineSentence(self.ast_file)
+        model = fasttext.FastText(sentences, size=self.astdim, window=3, min_count=1, iter=10, min_n=3, max_n=6, word_ngrams=0)
+        #model = word2vec.Word2Vec(sentences, size=self.astdim)
+        model.save(u"ast.model")
+        return model
+
+    def ast_path_tensor(self, path, model):
+        pathtensor = [0] * self.astdim
+        for p in path.split():
+            pathtensor = torch.from_numpy(model[p]) + torch.tensor(pathtensor, dtype=torch.float)
+
+        return Variable(torch.tensor(pathtensor)).to(self.device)
+
+

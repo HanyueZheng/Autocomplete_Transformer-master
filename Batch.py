@@ -77,7 +77,7 @@ class Batch_ast:
         self.ast = ast
         self.src_mask = (src != pad).unsqueeze(-2)
         self.ent_mask = None
-        self.ast_mask = None
+        self.ast_mask = (src != pad).unsqueeze(-2)
         if self.trg is not None:
             self.trg = trg[:, :-1]
             self.trg_y = trg[:, 1:]

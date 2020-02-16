@@ -1,4 +1,4 @@
-from VocabularyLoader import VocabularyLoader_char,VocabularyLoader_token, VocabularyLoader_ast
+from VocabularyLoader import VocabularyLoader_char,VocabularyLoader_token, VocabularyLoader_ast, VocabularyLoader_newast
 import random
 import torchsnooper
 import numpy as np 
@@ -191,7 +191,7 @@ class DataLoader_token_ast():
             contents = contents + content[i] + " "
 
         #path_tensor = Variable(torch.zeros(self.ast_token_num - 1).long()).to(self.device)
-        path_addlist = [0] * self.ast_token_num
+        path_addlist = [0] * self.chunk_len
 
         keylist = []
         start = 0
@@ -216,7 +216,6 @@ class DataLoader_token_ast():
                 #t.resize(t.size(), path_tensor.size())
                 # print(t.size())
 #                trans = nn.Embedding(t.size(), self.ast_token_num - 1)
-
                 path_addlist = np.sum([t, path_addlist], axis = 0)
 
         ast = torch.Tensor(path_addlist).long()
@@ -238,6 +237,7 @@ class DataLoader_token_ast():
             # length of ent?
             ent = torch.zeros(self.chunk_len - 1).long()
 
+
             for j in range(self.chunk_len - i - 1):
                 input[j] = self.vocabularyLoader.n_tokens - 1
             #print("chunck:")
@@ -245,6 +245,7 @@ class DataLoader_token_ast():
             input[-i:] = chunk[:i]
             target = chunk[i - 1:i + 1]
             ent[-i:] = ents[:i]
+            ast[-i:] = ast[:i]
             input = input.to(self.device)
             # print(input)
             # print(input.size())
@@ -257,6 +258,123 @@ class DataLoader_token_ast():
             ast = ast.to(self.device)
             # print(ast)
             # print(ast.size())
+            input_target_pair.append((input, ent, target, ast))
+        return input_target_pair
+
+    def __random_chunk(self):
+        start_index = random.randint(0, self.file_len-self.chunk_len)
+        end_index = start_index + self.chunk_len
+        if end_index > self.file_len:
+            return self.vocabularyLoader.token_tensor(self.__random_chunk())
+        else:
+            return self.vocabularyLoader.token_tensor(self.token_list[start_index:end_index]), \
+                   self.token_list[start_index:end_index]
+
+class Dataloader_token_newast():
+    def __init__(self, filename, kg, ast_file, chunk_len, device, astdim):
+        self.kg = kg
+        self.astfile = ast_file
+        with open(filename, 'r', encoding='UTF-8') as f:
+            lines = f.readlines()
+        self.content = "".join(lines)
+        self.token_list = self.content.replace('\n', ' ').replace('\t', ' ').split(' ')
+        self.token_list = [i for i in self.token_list if (len(str(i))) != 0]
+        self.file_len = len(self.token_list)
+        self.chunk_len = chunk_len
+        self.device = device
+        self.astdim = astdim
+        self.vocabularyLoader = VocabularyLoader_newast(filename, ast_file, self.astdim, self.device)
+        self.model = self.vocabularyLoader.word2vec()
+
+    def find_path(self, filename):
+        pathdic = {}
+        key = ""
+        with open(filename, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                if(line != ""):
+                    if line[0] == "[":
+                        pathdic[line] = []
+                        key = line
+                    else:
+                        pathdic[key].append(line)
+                #line = f.readline()
+                #print(line)
+            #print(pathdic)
+        #print(pathdic)
+        return pathdic
+
+    def path_encode(self, pathdic):
+        path_encodedic = {}
+        for k in pathdic.keys():
+            path_encodedic[k] = []
+            path = pathdic[k]
+            for p in path:
+                pencode = self.vocabularyLoader.ast_path_tensor(p, self.model)
+                path_encodedic[k].append(pencode)
+        return path_encodedic
+
+    def next_chunk(self):
+        # TODO : add [UNK]
+        chunk, content = self.__random_chunk()
+        ents_list = []
+        ents = [24] * self.chunk_len  # UNK = 24 to be modified
+        path_encodedic = self.path_encode(self.find_path(self.astfile))
+        contents = ""
+        for i in range(len(content)):
+            contents = contents + content[i] + " "
+        # TODO modify
+        for i in range(len(self.kg)):
+            if contents.find(" " + self.kg[i] + " ") != -1:
+                ents_list.append(self.kg[i])
+        for i in range(len(ents_list)):
+            key = ents_list[i].strip().split()
+            if content.index(key[0]) >= 0:
+                ents[content.index(key[0])] = self.kg.index(" ".join(key))
+        ents = torch.Tensor(ents).long()
+
+        path_addlist = torch.tensor([0] * (self.astdim)).float()
+        keylist = []
+        start = 0
+        while contents.find("[", start) > 0:
+            # print(path_encodedic)
+            start = contents.find("[ iTC", start)
+            # print("start: " + str(start))
+            if contents.find("]", start) > 0:
+                end = contents.find("]", start)
+                # print("end:" + str(end))
+                key = contents[start: end + 1]
+                key = key.replace(" ", "") + "\n"
+                if key != "" and key in path_encodedic.keys():
+                    keylist.append(key)
+                start = end
+            else:
+                start = len(contents) - 1
+        for k in keylist:
+            ast_list = path_encodedic[k]
+
+            for t in ast_list:
+                # t.resize(t.size(), path_tensor.size())
+                # print(t.size())
+                #                trans = nn.Embedding(t.size(), self.ast_token_num - 1)
+                path_addlist = path_addlist + torch.tensor(t).float()
+
+        ast = torch.tensor(path_addlist).float()
+
+        input_target_pair = []
+        for i in range(1, self.chunk_len):
+            input = torch.zeros(self.chunk_len - 1).long()
+            # length of ent?
+            ent = torch.zeros(self.chunk_len - 1).long()
+            for j in range(self.chunk_len - i - 1):
+                input[j] = self.vocabularyLoader.n_tokens - 1
+            input[-i:] = chunk[:i]
+            target = chunk[i - 1:i + 1]
+            ent[-i:] = ents[:i]
+            input = input.to(self.device)
+            target = target.to(self.device)
+            ent = ent.to(self.device)
+            ast = ast.to(self.device)
             input_target_pair.append((input, ent, target, ast))
         return input_target_pair
 

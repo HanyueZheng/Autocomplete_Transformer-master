@@ -133,29 +133,28 @@ class Generator(nn.Module):
 
 
 class IntermediateLayer(nn.Module):
-	def __init__(self, ast_size, size, intermediate_size):
+	def __init__(self, size, intermediate_size):
 		super(IntermediateLayer, self).__init__()
 		self.dense = nn.Linear(size, intermediate_size)
 		self.dense_ent = nn.Linear(512, intermediate_size)
-		self.dense_ast = nn.Linear(931, intermediate_size)
+		self.aa = nn.Linear(99, intermediate_size)
 
 		# Information Fusion
 		self.intermediate_act_fn = gelu
 
-	def forward(self, hidden_states, hidden_states_ent, hidden_states_ast):
+	def forward(self, hidden_states, hidden_states_ent):
 		# print("hidden_states:")
-		# print(hidden_states.size())
+		print(hidden_states.size())
 		# print("hidden_states_ent size:")
-		# print(hidden_states_ent.size())
+		print(hidden_states_ent.size())
 		# print("hidden_states_ast:")
-		# print(hidden_states_ast.size())
+		#print(hidden_states_ast.size())
 
 		hidden_states_ = self.dense(hidden_states)
-		hidden_states.size()
+		hidden_states_.size()
 		hidden_states_ent_ = self.dense_ent(hidden_states_ent)
-		hidden_states_ent.size()
-		hidden_states_ast = hidden_states_ast.permute(0,2,1)
-		hidden_states_ast = self.dense_ast(hidden_states_ast)
+		hidden_states_ent_.size()
+
 		#hidden_states_ast.size()
 		# print("hidden_states size:")
 		# print(hidden_states.size())
@@ -165,7 +164,7 @@ class IntermediateLayer(nn.Module):
 		# print(hidden_states_ast.size())
 
 
-		hidden_states = self.intermediate_act_fn(hidden_states_ + hidden_states_ent_ + hidden_states_ast)
+		hidden_states = self.intermediate_act_fn(hidden_states_ + hidden_states_ent_)
 
 		return hidden_states#, hidden_states_ent
 
@@ -207,7 +206,7 @@ class SublayerConnection4AST(nn.Module):
 		self.dropout = nn.Dropout(dropout)
 
 	def forward(self, attention_output, attention_output_ent, output_ast):
-		output_ast.size()
+		#output_ast.size()
 		intermediate_output = self.intermediate(attention_output, attention_output_ent, output_ast)
 		intermediate_output.size()
 		hidden_states = self.dense(intermediate_output)
