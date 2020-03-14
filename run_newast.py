@@ -148,9 +148,9 @@ if __name__ == "__main__":
             V_ast = dataloader.vocabularyLoader.n_token_newast
 
             criterion = LabelSmoothing(size=V, padding_idx=0, smoothing=0.0)
-            #criterion.cuda()
+            criterion.cuda()
             model = make_model_newast(V, V, V_ast, "kg_embed/embedding.vec.json", N=transformer_size)
-            #model.cuda()
+            model.cuda()
             model_opt = NoamOpt(model.src_embed[0].d_model, 1, 400,
                                 torch.optim.Adam(model.parameters(), lr=0, betas=(0.9, 0.98), eps=1e-9))
 
