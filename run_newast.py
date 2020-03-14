@@ -71,6 +71,11 @@ def data_gen_token_newast(dataloader, batch, nbatches, chunk_len, device, astdim
 if __name__ == "__main__":
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(device)
+
+    print(torch.__version__)
+
+    print(torch.version.cuda)
 
     # sys.argv.append('train')
     sys.argv.append('train')
