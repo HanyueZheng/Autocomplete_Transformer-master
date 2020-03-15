@@ -209,7 +209,8 @@ class EncoderDecoder4newAST(nn.Module):
         ast_mask.size()
         src_mask.size()
         #self.ast_embed(ast)
-        #b = self.encoder4ast(self.ast_embed(ast), ast_mask)
+        b = self.encoder4ast(self.ast_embed(ast), ast_mask)
+        c = a+b
         a.size()
         #b.size()
         return self.encoder(self.src_embed(src), src_mask, self.ent_embed(ent), ent_mask) + self.encoder4ast(self.ast_embed(ast), ast_mask)
