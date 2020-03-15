@@ -206,8 +206,8 @@ class EncoderDecoder4newAST(nn.Module):
         try:
             a = self.encoder4ast(self.ast_embed(ast), ast_mask)
             print(a)
-            b = self.encoder4ast(self.ast_embed(ast), ast_mask)
-            print(b)
+            #b = self.encoder4ast(self.ast_embed(ast), ast_mask)
+            #print(b)
         except Exception as e:
             pdb.set_trace()
             print(e)
