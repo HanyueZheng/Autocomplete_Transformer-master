@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import math
 from torch.autograd import Variable
+import pdb
 
 # =============================================================================
 #
@@ -18,7 +19,12 @@ class Embeddings(nn.Module):
 		self.d_model = d_model
 
 	def forward(self, x):
-		return self.lut(x.long()) * math.sqrt(self.d_model)
+		try:
+			a = self.lut(x.long()) * math.sqrt(self.d_model)
+		except Exception as e:
+			pdb.set_trace()
+			print(e)
+		return a
 
 
 # =============================================================================
