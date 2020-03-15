@@ -55,6 +55,8 @@ class SimpleLossCompute:
 
     def __call__(self, x, y, norm):
         x = self.generator(x)
+        print(x.contiguous().view(-1, x.size(-1)).type())
+        print(y.contiguous().view(-1).float().type())
         loss = self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()) / norm
         loss.backward()
         if self.opt is not None:
