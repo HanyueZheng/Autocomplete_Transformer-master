@@ -8,6 +8,7 @@ from Layers import EncoderLayer, DecoderLayer, clones
 from Embed import Embeddings, PositionalEncoding
 from Layers import EncoderLayer4KG, EncoderLayer4AST, EncoderLayer4newAST
 from torch.autograd import Variable
+import pdb
 
 # =============================================================================
 #
@@ -202,15 +203,18 @@ class EncoderDecoder4newAST(nn.Module):
         return self.decode(self.encode(src, src_mask, ent, ent_mask, ast, ast_mask), src_mask, tgt, tgt_mask)
 
     def encode(self, src, src_mask, ent, ent_mask, ast, ast_mask):
-        a = self.encoder(self.src_embed(src), src_mask, self.ent_embed(ent), ent_mask)
+        try:
+            a = self.encoder(self.src_embed(src), src_mask, self.ent_embed(ent), ent_mask)
+        except Exception as e:
+            pdb.set_trace()
+            print(e)
         ast.size()
         src.size()
         ent.size()
         ast_mask.size()
         src_mask.size()
         #self.ast_embed(ast)
-        b = self.encoder4ast(self.ast_embed(ast), ast_mask)
-        c = a+b
+        #b = self.encoder4ast(self.ast_embed(ast), ast_mask)
         a.size()
         #b.size()
         return self.encoder(self.src_embed(src), src_mask, self.ent_embed(ent), ent_mask) + self.encoder4ast(self.ast_embed(ast), ast_mask)
