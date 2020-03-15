@@ -215,7 +215,6 @@ class EncoderDecoder4newAST(nn.Module):
             print(e)
         try:
             c = a
-            print(c)
         except Exception as e:
             pdb.set_trace()
             print(e)
