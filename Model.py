@@ -213,14 +213,12 @@ class EncoderDecoder4newAST(nn.Module):
         except Exception as e:
             pdb.set_trace()
             print(e)
-        ast.size()
-        src.size()
-        ent.size()
-        ast_mask.size()
-        src_mask.size()
-        #self.ast_embed(ast)
-        #b = self.encoder4ast(self.ast_embed(ast), ast_mask)
-        #b.size()
+        try:
+            c = a + b
+            print(c)
+        except Exception as e:
+            pdb.set_trace()
+            print(e)
         return self.encoder(self.src_embed(src), src_mask, self.ent_embed(ent), ent_mask) + self.encoder4ast(self.ast_embed(ast), ast_mask)
 
     def decode(self, memory, src_mask, tgt, tgt_mask):
