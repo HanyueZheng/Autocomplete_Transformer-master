@@ -8,6 +8,7 @@ import Model
 import matplotlib.pyplot as plt
 import seaborn
 from HyperParameter import epoches_of_loss_record, epoches_of_model_save, beam_search_number
+import pdb
 
 # =============================================================================
 #
@@ -57,7 +58,11 @@ class SimpleLossCompute:
         x = self.generator(x)
         print(x.contiguous().view(-1, x.size(-1)).type())
         print(y.contiguous().view(-1).float().type())
-        loss = self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()) / norm.float()
+        try:
+            loss = self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()) / norm.float()
+        except Exception as e:
+            pdb.set_trace()
+            print(e)
         loss.backward()
         if self.opt is not None:
             self.opt.step()

@@ -19,12 +19,7 @@ class Embeddings(nn.Module):
 		self.d_model = d_model
 
 	def forward(self, x):
-		#try:
-		a = self.lut(x.long()) * math.sqrt(self.d_model)
-		#except Exception as e:
-		#	pdb.set_trace()
-		#	print(e)
-		return a
+		return self.lut(x.long()) * math.sqrt(self.d_model)
 
 
 # =============================================================================
