@@ -204,13 +204,15 @@ class EncoderDecoder4newAST(nn.Module):
 
     def encode(self, src, src_mask, ent, ent_mask, ast, ast_mask):
         try:
-            a = self.ast_embed(ast)
+            print("ast")
+            print(ast)
+            a = self.ast_embed(torch.FloatTensor.abs_(ast))
             print(a)
         except Exception as e:
             pdb.set_trace()
             print(e)
 
-        return self.encoder(self.src_embed(src), src_mask, self.ent_embed(ent), ent_mask) + self.encoder4ast(self.ast_embed(ast), ast_mask)
+        return self.encoder(self.src_embed(src), src_mask, self.ent_embed(ent), ent_mask) + self.encoder4ast(self.ast_embed(torch.FloatTensor.abs_(ast)), ast_mask)
 
     def decode(self, memory, src_mask, tgt, tgt_mask):
         return self.decoder(self.tgt_embed(tgt), memory, src_mask, tgt_mask)
