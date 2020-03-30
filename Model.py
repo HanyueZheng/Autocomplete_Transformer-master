@@ -207,6 +207,7 @@ class EncoderDecoder4newAST(nn.Module):
             print("ast")
             print(ast)
             a = self.ast_embed(torch.FloatTensor.abs_(ast))
+            print("a:")
             print(a)
         except Exception as e:
             pdb.set_trace()
