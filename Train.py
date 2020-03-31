@@ -64,7 +64,7 @@ class SimpleLossCompute:
         print("ytype:")
         print(y.contiguous().view(-1).type())
         print(x.contiguous().view(-1, x.size(-1)).type())
-        loss = self.criterion(x.contiguous().view(-1, x.size(-1)).long(), y.contiguous().view(-1)) / norm
+        loss = self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()) / norm
         # except Exception as e:
         #     pdb.set_trace()
         #     print(e)
