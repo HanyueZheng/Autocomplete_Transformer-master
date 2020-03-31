@@ -60,7 +60,7 @@ class SimpleLossCompute:
         print(y.contiguous().view(-1).float().type())
         # try:
         print("normtype:")
-        print(norm.type())
+        print(norm.float().type())
         print("ytype:")
         print(y.contiguous().view(-1).type())
         print(x.contiguous().view(-1, x.size(-1)).type())
