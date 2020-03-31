@@ -171,7 +171,7 @@ def make_model_newast(src_vocab, tgt_vocab, ast_vocab, kg_embed, N=6, d_model=51
         Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout), N),
         nn.Sequential(Embeddings(d_model, src_vocab), c(position)),
         torch.nn.Embedding.from_pretrained(embed),
-        nn.Sequential(Embeddings(d_model, 3000), c(position)),
+        nn.Sequential(Embeddings(d_model, 5000), c(position)),
         nn.Sequential(Embeddings(d_model, tgt_vocab), c(position)),
         Generator(d_model, tgt_vocab))
 
@@ -207,6 +207,7 @@ class EncoderDecoder4newAST(nn.Module):
             print("ast")
             print(ast)
             a = self.ast_embed(torch.FloatTensor.abs_(ast))
+            print("a")
             print(a.size())
         except Exception as e:
             pdb.set_trace()
