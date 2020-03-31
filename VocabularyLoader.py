@@ -186,7 +186,7 @@ class VocabularyLoader_newast():
 
     def word2vec(self):
         sentences = word2vec.LineSentence(self.ast_file)
-        model = fasttext.FastText(sentences, size=self.astdim, window=3, min_count=1, iter=10, min_n=3, max_n=6, word_ngrams=0, max_vocab_size=931)
+        model = fasttext.FastText(sentences, size=self.astdim, window=3, min_count=1, iter=10, min_n=3, max_n=6, word_ngrams=0, max_vocab_size=932)
         #model = word2vec.Word2Vec(sentences, size=self.astdim)
         model.save(u"ast.model")
         return model
