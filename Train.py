@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import seaborn
 from HyperParameter import epoches_of_loss_record, epoches_of_model_save, beam_search_number
 import pdb
+import inspect
+
 
 # =============================================================================
 #
@@ -68,6 +70,9 @@ class SimpleLossCompute:
             print(x.contiguous().view(-1, x.size(-1)))
             print("y.contiguous().view(-1).float()")
             print(y.contiguous().view(-1).float())
+            import inspect
+
+            inspect.getargspec(self.criterion)
             loss = self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()) / norm.float()
         except Exception as e:
              pdb.set_trace()
