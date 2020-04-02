@@ -196,6 +196,7 @@ if __name__ == "__main__":
             #model = torch.load(trained_model_name).cuda()
             model = torch.load(trained_model_name)
             model.eval()
+            astfile = "Path.txt"
             #dataloader = DataLoader_token_kg(filename, ents, chunk_len, device)
             dataloader = Dataloader_token_newast(filename, ents, astfile, chunk_len, device, astdim=99)
             V = dataloader.vocabularyLoader.n_tokens  # vocabolary size
