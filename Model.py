@@ -206,7 +206,7 @@ class EncoderDecoder4newAST(nn.Module):
         try:
             print("ast")
             print(ast)
-            a = self.ast_embed(ast)
+            #a = self.ast_embed(ast)
             #a = self.ast_embed(torch.FloatTensor.abs_(ast))
             #print("a")
             #print(a.size())
