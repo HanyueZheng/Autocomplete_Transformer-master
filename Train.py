@@ -73,7 +73,7 @@ class SimpleLossCompute:
             import inspect
 
             inspect.getargspec(self.criterion)
-            if self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()).type() == None:
+            if self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()) == None:
                 print("None")
             loss = self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()) / norm.float()
         except Exception as e:
