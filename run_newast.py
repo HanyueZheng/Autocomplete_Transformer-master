@@ -154,7 +154,7 @@ if __name__ == "__main__":
             V = dataloader.vocabularyLoader.n_tokens  # vocabolary size
             V_ast = dataloader.vocabularyLoader.n_token_newast
 
-            criterion = LabelSmoothing(size=V, padding_idx=1, smoothing=0.0)
+            criterion = LabelSmoothing(size=V, padding_idx=0, smoothing=0.0)
             #criterion.cuda()
             model = make_model_newast(V, V, V_ast, "kg_embed/embedding.vec.json", N=transformer_size)
             #model.cuda()
