@@ -79,7 +79,7 @@ class SimpleLossCompute:
             # print(self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()))
             # print("loss:")
             # print(self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()) / norm.float())
-            self.loss = self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float())
+            self.loss = self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1))
             #loss = self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()) / norm.float()
             print(self.loss)
         except Exception as e:
