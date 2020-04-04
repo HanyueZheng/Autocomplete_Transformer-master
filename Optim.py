@@ -70,6 +70,10 @@ class LabelSmoothing(nn.Module):
 		if mask.dim() > 0:
 			true_dist.index_fill_(0, mask.squeeze(), 0.0)
 		self.true_dist = true_dist
-		pdb.set_trace()
-		a = self.criterion(x, Variable(true_dist, requires_grad=False))
+
+		try:
+			a = self.criterion(x, Variable(true_dist, requires_grad=False))
+		except Exception as e:
+			print(e)
+			pdb.set_trace()
 		return a
