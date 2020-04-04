@@ -71,8 +71,8 @@ def data_gen_token_newast(dataloader, batch, nbatches, chunk_len, device, astdim
 
 if __name__ == "__main__":
 
-    #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    device = torch.device("cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    #device = torch.device("cpu")
     print(device)
 
     print(torch.__version__)
@@ -157,9 +157,9 @@ if __name__ == "__main__":
 
             #criterion = LabelSmoothing(size=V, padding_idx=0, smoothing=0.0)
             criterion = nn.NLLLoss()
-            #criterion.cuda()
+            criterion.cuda()
             model = make_model_newast(V, V, V_ast, "kg_embed/embedding.vec.json", N=transformer_size)
-            #model.cuda()
+            model.cuda()
             model_opt = NoamOpt(model.src_embed[0].d_model, 1, 400,
                                 torch.optim.Adam(model.parameters(), lr=0, betas=(0.9, 0.98), eps=1e-9))
 

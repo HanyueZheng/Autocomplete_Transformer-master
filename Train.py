@@ -181,7 +181,7 @@ def run_epoch_newast(stage, data_iter, model, loss_compute, nbatches, epoch=0):
             start = time.time()
             tokens = 0
     if epoch%epoches_of_model_save==0:
-        torch.save(model, "transformer" + "{}".format(epoch) + ".model")
+        torch.save(model, "transformer" + "{}".format(epoch) + "%s  Loss: %f Tokens per Sec: %f" % (stage, loss.detach().cpu().numpy() / batch.ntokens.cpu().numpy(), tokens / elapsed) + ".model")
 
 def run_epoch_ast(stage, data_iter, model, loss_compute, nbatches, device, ast_token_num, embedding_dim=512, hidden_size=512, epoch=0):
     "Standard Training and Logging Function"
