@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
+import pdb
 
 # =============================================================================
 #
@@ -69,4 +70,6 @@ class LabelSmoothing(nn.Module):
 		if mask.dim() > 0:
 			true_dist.index_fill_(0, mask.squeeze(), 0.0)
 		self.true_dist = true_dist
-		return self.criterion(x, Variable(true_dist, requires_grad=False))
+		pdb.set_trace()
+		a = self.criterion(x, Variable(true_dist, requires_grad=False))
+		return a
