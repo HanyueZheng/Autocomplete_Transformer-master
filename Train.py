@@ -55,38 +55,41 @@ class SimpleLossCompute:
         self.generator = generator
         self.criterion = criterion
         self.opt = opt
+        self.loss = 0
 
     def __call__(self, x, y, norm):
         x = self.generator(x)
-        print(x.contiguous().view(-1, x.size(-1)).type())
-        print(y.contiguous().view(-1).float().type())
+        #print(x.contiguous().view(-1, x.size(-1)).type())
+        #print(y.contiguous().view(-1).float().type())
         try:
-            print("normtype:")
-            print(norm.float().type())
-            print("ytype:")
-            print(y.contiguous().view(-1).type())
-            print(x.contiguous().view(-1, x.size(-1)).type())
-            print("x.contiguous().view(-1, x.size(-1))")
-            print(x.contiguous().view(-1, x.size(-1)))
-            print("y.contiguous().view(-1).float()")
-            print(y.contiguous().view(-1).float())
-            import inspect
+            # print("normtype:")
+            # print(norm.float().type())
+            # print("ytype:")
+            # print(y.contiguous().view(-1).type())
+            # print(x.contiguous().view(-1, x.size(-1)).type())
+            # print("x.contiguous().view(-1, x.size(-1))")
+            # print(x.contiguous().view(-1, x.size(-1)))
+            # print("y.contiguous().view(-1).float()")
+            # print(y.contiguous().view(-1).float())
+            # import inspect
 
-            inspect.getargspec(self.criterion)
+            #inspect.getargspec(self.criterion)
             # if self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()) == None:
             #     print("None")
-            print(self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()))
-            print("loss:")
-            print(self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()) / norm.float())
-            loss = self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()) / norm.float()
+            # print(self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()))
+            # print("loss:")
+            # print(self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()) / norm.float())
+            self.loss += self.criterion(x.unsqueeze(0), y.unsqueeze(0))
+            #loss = self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()) / norm.float()
+            print(self.loss)
         except Exception as e:
              pdb.set_trace()
              print(e)
-        loss.backward()
+        self.loss.backward()
         if self.opt is not None:
             self.opt.step()
             self.opt.optimizer.zero_grad()
-        return loss.data.item() * norm.float()
+        return self.loss.data.item() * norm.float()
 
 # 贪婪解码
 # 为了简单起见，此代码使用贪婪解码来预测。
