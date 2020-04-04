@@ -75,6 +75,9 @@ class SimpleLossCompute:
             inspect.getargspec(self.criterion)
             # if self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()) == None:
             #     print("None")
+            print(self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()))
+            print("loss:")
+            print(self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()) / norm.float())
             loss = self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1).float()) / norm.float()
         except Exception as e:
              pdb.set_trace()
